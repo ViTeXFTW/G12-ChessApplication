@@ -21,19 +21,44 @@ namespace WPF_screen
             InitializeComponent();
         }
 
+        private void UserNameInput_TextChanged(object sender, RoutedEventArgs e)
+        // Hides the placeholder text when the user starts typing in the username field.
+        {
+            if (userNameInput.Text.Length > 0)
+            {
+                tbUsername.Visibility = Visibility.Collapsed;
+            }
+            else 
+            {
+                tbUsername.Visibility = Visibility.Visible;
+            }
+        }
+
+        private void PassWordInput_PasswordChanged(object sender, RoutedEventArgs e)
+        // Hides the placeholder text when the user starts typing in the password field.
+        {
+            if (passWordInput.Password.Length > 0)
+            {
+                tbPassword.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                tbPassword.Visibility = Visibility.Visible;
+            }
+        }
+
         private void LogInButton_Click(object sender, RoutedEventArgs e)
+        // Checks if the user has entered a username and password, and if so, stores them in the userName and passWord variables.
         {
             userName = userNameInput.Text;
-            passWord = passWordInput.Text;
+            passWord = passWordInput.Password;
 
-            if (userName == "Username" || passWord == "Password")
+            if (userName == "" || passWord == "") 
             {
                 warningMessage.Content = "Please enter both a username and a password to proceed.";
-                return;
             }
+            // This is where we should send a request to a DB to check if the user exists and if the password is correct.
 
-
-            Console.WriteLine($"Hello {userName}");
 
         }
     }

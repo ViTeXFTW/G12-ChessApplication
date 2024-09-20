@@ -8,12 +8,14 @@
         Title="LoginScreen" Height="450" Width="800">
     <Grid>
         <Label Content="Log In" HorizontalAlignment="Center" Margin="0,168,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="userNameInput" HorizontalAlignment="Center" Margin="0,199,0,0" TextWrapping="Wrap" Text="Username" VerticalAlignment="Top" Width="120"/>
-        <TextBox x:Name="passWordInput" HorizontalAlignment="Center" Margin="0,222,0,0" TextWrapping="Wrap" Text="Password" VerticalAlignment="Top" Width="120"/>
+        <TextBox x:Name="userNameInput" HorizontalAlignment="Center" Margin="0,199,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="120" TextChanged="UserNameInput_TextChanged"/>
         <Label Content="Don't have an account? Create one!" HorizontalAlignment="Center" Margin="0,291,0,0" VerticalAlignment="Top"/>
         <Button Content="Create Account" HorizontalAlignment="Center" Margin="0,322,0,0" VerticalAlignment="Top"/>
         <Button Content="Log In" Click="LogInButton_Click" HorizontalAlignment="Left" Margin="378,245,0,0" VerticalAlignment="Top"/>
-        <Label x:Name="warningMessage" Content="" HorizontalAlignment="Left" Margin="387,270,0,0" VerticalAlignment="Top" Foreground="Red"/>
+        <Label x:Name="warningMessage" Content="" HorizontalAlignment="Left" Margin="238,270,0,0" VerticalAlignment="Top" Foreground="Red"/>
+        <TextBlock x:Name="tbUsername" HorizontalAlignment="Left" Margin="370,199,0,0" TextWrapping="Wrap" Text="Username" VerticalAlignment="Top" IsHitTestVisible="False"/>
+        <PasswordBox x:Name="passWordInput" HorizontalAlignment="Center" Margin="0,222,0,0" VerticalAlignment="Top" Width="120" PasswordChanged="PassWordInput_PasswordChanged"/>
+        <TextBlock x:Name="tbPassword" HorizontalAlignment="Left" Margin="372,222,0,0" TextWrapping="Wrap" Text="Password" VerticalAlignment="Top" IsHitTestVisible="False"/>
 
     </Grid>
 </Window>
