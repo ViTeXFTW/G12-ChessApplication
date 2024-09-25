@@ -1,16 +1,15 @@
-﻿<Window x:Class="WPF_screen.LoginScreen"
+﻿<Window x:Class="G12_ChessApplication.LoginScreen"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:WPF_screen"
         mc:Ignorable="d"
         Title="LoginScreen" Height="450" Width="800">
     <Grid>
         <Label Content="Log In" HorizontalAlignment="Center" Margin="0,168,0,0" VerticalAlignment="Top"/>
         <TextBox x:Name="userNameInput" HorizontalAlignment="Center" Margin="0,199,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="120" TextChanged="UserNameInput_TextChanged"/>
         <Label Content="Don't have an account? Create one!" HorizontalAlignment="Center" Margin="0,291,0,0" VerticalAlignment="Top"/>
-        <Button Content="Create Account" HorizontalAlignment="Center" Margin="0,322,0,0" VerticalAlignment="Top"/>
+        <Button Content="Create Account" Click="CreateButton_Click" HorizontalAlignment="Center" Margin="0,322,0,0" VerticalAlignment="Top"/>
         <Button Content="Log In" Click="LogInButton_Click" HorizontalAlignment="Left" Margin="378,245,0,0" VerticalAlignment="Top"/>
         <Label x:Name="warningMessage" Content="" HorizontalAlignment="Left" Margin="238,270,0,0" VerticalAlignment="Top" Foreground="Red"/>
         <TextBlock x:Name="tbUsername" HorizontalAlignment="Left" Margin="370,199,0,0" TextWrapping="Wrap" Text="Username" VerticalAlignment="Top" IsHitTestVisible="False"/>
