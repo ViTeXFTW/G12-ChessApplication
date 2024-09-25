@@ -1,6 +1,6 @@
 ﻿using System.Windows;
-using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
+using System.Windows.Media;
 
 
 namespace G12_ChessApplication
@@ -11,20 +11,17 @@ namespace G12_ChessApplication
         private string passWord = "";
 
         // In-memory user list for simplicity. Later, you can replace this with a DB.
-        private User currentUser;
+        private SQLConnector.User currentUser;
 
         // Database context
-        private AppDbContext dbContext;
+        private SQLConnector dbConnector;
 
-        // Current logged-in user
-       
         
         public LoginScreen()
         {
             InitializeComponent();
-            dbContext = new AppDbContext();
-            dbContext.Database.EnsureCreated(); // Ensures the database is created if it doesn't exist.
-            
+            dbConnector = new SQLConnector();
+            dbConnector.InitializeDatabase(); // Ensure the database is created and ready
         }
 
         private void UserNameInput_TextChanged(object sender, RoutedEventArgs e)
@@ -65,15 +62,13 @@ namespace G12_ChessApplication
             }
     
             // Authenticate the user asynchronously
-            currentUser = await AuthenticateUser(userName, passWord);
+            currentUser = await dbConnector.AuthenticateUser(userName, passWord);
 
             if (currentUser != null)
             {
                 Console.WriteLine("Login successful");
                 Console.WriteLine($"Logged in as: {currentUser.Username}");
-
                 // Handle admin vs. user logic
-                
             }
             else
             {
@@ -81,94 +76,38 @@ namespace G12_ChessApplication
             }
         }
         
-        private async Task<User> AuthenticateUser(string username, string password)
-        {
-            // Query the database asynchronously to find the user by username and password
-            return await dbContext.Login.FirstOrDefaultAsync(user => user.Username == username && user.Passw == password);
-        }
-        
-        
-        private void CreateButton_Click(object sender, RoutedEventArgs e) // Eventhandler for CreateButton
+        private void CreateButton_Click(object sender, RoutedEventArgs e)
         {
             userName = userNameInput.Text;
             passWord = passWordInput.Password;
 
-            // Check if the fields are empty
             if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(passWord))
             {
                 warningMessage.Content = "Please enter both a username and a password to create an account.";
+                warningMessage.Foreground = new SolidColorBrush(Colors.Red); // Set the color to red for error
                 return;
             }
 
-            // Check if the user already exists in the database
-            var existingUser = dbContext.Login.FirstOrDefault(user => user.Username == userName);
-    
-            if (existingUser != null)
+            // Create user through SQLConnector
+            var result = dbConnector.CreateUser(userName, passWord);
+
+            if (result == "Username already exists. Please choose a different username.")
             {
-                // User already exists
-                warningMessage.Content = "Username already exists. Please choose a different username.";
+                // Set the message and change color to red for an existing user error
+                warningMessage.Content = result;
+                warningMessage.Foreground = new SolidColorBrush(Colors.Red); // Red for errors
             }
             else
             {
-                // User doesn't exist, so create a new one
-                var newUser = new User
-                {
-                    Username = userName,
-                    Passw = passWord,
-                    
-                };
-
-                // Add the new user to the database
-                dbContext.Login.Add(newUser);
-                dbContext.SaveChanges(); // Save changes to the database
-
-                // Inform the user that the account has been created
-                warningMessage.Content = "Account created successfully! You can now log in.";
-
-                // Optionally clear the input fields after creation
-                userNameInput.Clear();
-                passWordInput.Clear();
-            }
-        }
-        
-        
-        public class AppDbContext : DbContext
-        {
-            public DbSet<User> Login { get; set; }
-
-            protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-            {
-                // Correct MySQL connection string with actual database name
-                var connectionString = "Server=mysql-makki12.alwaysdata.net;Database=makki12_chess;User=makki12;Password=ChessGame_;";
-                optionsBuilder.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
+                // Set the message and change color to green for successful account creation
+                warningMessage.Content = result;
+                warningMessage.Foreground = new SolidColorBrush(Colors.Green); // Green for success
             }
 
-            protected override void OnModelCreating(ModelBuilder modelBuilder)
-            {
-                // Fluent API: Set UserName as the primary key
-                modelBuilder.Entity<User>()
-                    .HasKey(u => u.Username);
-
-                // Seed the database with an admin and a test user
-                modelBuilder.Entity<User>().HasData(
-                    new User { Username = "admin", Passw = "admin" },
-                    new User { Username = "test", Passw = "123"}
-                );
-            }
+            // Optionally clear the input fields after creation
+            userNameInput.Clear();
+            passWordInput.Clear();
         }
 
-
-        public class User
-        {
-            [Key]  // Marks UserName as the primary key
-            public string Username { get; set; } 
-
-            public string Passw { get; set; }
-            
-        }
-
-        
-
-        
     }
 }
