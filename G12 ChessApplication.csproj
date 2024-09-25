@@ -9,4 +9,42 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Remove="Images\b_bishop_2x_ns.png" />
+    <None Remove="Images\b_king_2x_ns.png" />
+    <None Remove="Images\b_knight_2x_ns.png" />
+    <None Remove="Images\b_pawn_2x_ns.png" />
+    <None Remove="Images\b_queen_2x_ns.png" />
+    <None Remove="Images\b_rook_2x_ns.png" />
+    <None Remove="Images\square brown dark_2x_ns.png" />
+    <None Remove="Images\square brown light_2x_ns.png" />
+    <None Remove="Images\square gray dark _2x_ns.png" />
+    <None Remove="Images\square gray light _2x_ns.png" />
+    <None Remove="Images\w_bishop_2x_ns.png" />
+    <None Remove="Images\w_king_2x_ns.png" />
+    <None Remove="Images\w_knight_2x_ns.png" />
+    <None Remove="Images\w_pawn_2x_ns.png" />
+    <None Remove="Images\w_queen_2x_ns.png" />
+    <None Remove="Images\w_rook_2x_ns.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Images\b_bishop_2x_ns.png" />
+    <Resource Include="Images\b_king_2x_ns.png" />
+    <Resource Include="Images\b_knight_2x_ns.png" />
+    <Resource Include="Images\b_pawn_2x_ns.png" />
+    <Resource Include="Images\b_queen_2x_ns.png" />
+    <Resource Include="Images\b_rook_2x_ns.png" />
+    <Resource Include="Images\square brown dark_2x_ns.png" />
+    <Resource Include="Images\square brown light_2x_ns.png" />
+    <Resource Include="Images\square gray dark _2x_ns.png" />
+    <Resource Include="Images\square gray light _2x_ns.png" />
+    <Resource Include="Images\w_bishop_2x_ns.png" />
+    <Resource Include="Images\w_king_2x_ns.png" />
+    <Resource Include="Images\w_knight_2x_ns.png" />
+    <Resource Include="Images\w_pawn_2x_ns.png" />
+    <Resource Include="Images\w_queen_2x_ns.png" />
+    <Resource Include="Images\w_rook_2x_ns.png" />
+  </ItemGroup>
+
 </Project>
