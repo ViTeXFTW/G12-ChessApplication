@@ -5,11 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows;
-using Chess;
 using System.Windows.Media;
 using System.Windows.Shapes;
 
-namespace ChessBoardSpace
+namespace G12_ChessApplication.Src.chess_game.util
 {
     internal class ChessBoard : Grid
     {
@@ -31,15 +30,15 @@ namespace ChessBoardSpace
 
         string defualtBoard = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
         string ranPos = "r1bk3r/p2pBpNp/n4n2/1p1NP2P/6P1/3P4/P1P1K3/q5b1";
-        public ChessBoard(double height = 640, double width = 640) 
+        public ChessBoard(double height = 640, double width = 640)
         {
-            Height = height; 
+            Height = height;
             Width = width;
 
             DefualtBoard();
             BoardSetup(defualtBoard);
         }
-        
+
         private void DefualtBoard()
         {
             double squareHeight = Height / 8;
@@ -62,7 +61,7 @@ namespace ChessBoardSpace
                 square.Margin = new Thickness(col * squareWidth, row * squareHeight, 0, 0);
 
                 Rectangle squareColor = new Rectangle();
-                squareColor.Fill = ( (switchColor + i) % 2 == 0) ? beige : green;
+                squareColor.Fill = (switchColor + i) % 2 == 0 ? beige : green;
                 squareColor.Stroke = new SolidColorBrush(Colors.Cyan);
                 squareColor.StrokeThickness = 0;
                 square.Children.Add(squareColor);
@@ -72,7 +71,7 @@ namespace ChessBoardSpace
                 {
                     col = 0;
                     row++;
-                    switchColor = (switchColor == 0) ? 1 : 0;
+                    switchColor = switchColor == 0 ? 1 : 0;
                 }
 
                 Children.Add(square);
