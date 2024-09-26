@@ -7,7 +7,7 @@ using System.Windows.Controls;
 
 namespace G12_ChessApplication.Src.chess_game.util
 {
-    abstract class ChessPiece : Image
+    public abstract class ChessPiece : Image
     {
         public readonly ChessColor ChessColor;
         public ChessPiece(ChessColor color)
