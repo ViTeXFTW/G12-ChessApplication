@@ -15,10 +15,10 @@ namespace G12_ChessApplication
             base.OnStartup(e);
 
             // Start with the login window
-            ShowLoginWindow();
+            init_login();
         }
 
-        private void ShowLoginWindow()
+        private void init_login()
         {
             var loginWindow = new LoginWindow();
             // Subscribe to the login success event
@@ -35,7 +35,7 @@ namespace G12_ChessApplication
             }
 
             // Show the main menu window
-            ShowMainMenuWindow();
+            init_mainmenu();
 
             // Close the login window
             if (sender is Window loginWindowToClose)
@@ -44,7 +44,7 @@ namespace G12_ChessApplication
             }
         }
 
-        private void ShowMainMenuWindow()
+        private void init_mainmenu()
         {
 
             try
@@ -71,7 +71,7 @@ namespace G12_ChessApplication
             switch (e.SelectedOption)
             {
                 case "PlayChess":
-                    ShowChessGame();
+                    init_game();
                     break;
                 case "Settings":
                     break;
@@ -86,7 +86,7 @@ namespace G12_ChessApplication
             }
         }
 
-        private void ShowChessGame()
+        private void init_game()
         {
             var gameWindow = new MainWindow();
             gameWindow.Show();

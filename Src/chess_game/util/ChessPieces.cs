@@ -6,22 +6,8 @@ using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 
-namespace Chess
+namespace G12_ChessApplication.Src.chess_game.util
 {
-    public enum ChessColor
-    {
-        WHITE = 0,
-        BLACK = 1,
-    }
-    abstract class ChessPiece : Image
-    {
-        public readonly ChessColor ChessColor;
-        public ChessPiece(ChessColor color) 
-        {
-            ChessColor = color;
-        }
-    }
-
     class Pawn : ChessPiece
     {
         public Pawn(ChessColor color) : base(color)
