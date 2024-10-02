@@ -29,6 +29,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="System.Collections.NonGeneric" Version="4.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Resource Include="Images\b_bishop_2x_ns.png" />
     <Resource Include="Images\b_king_2x_ns.png" />
     <Resource Include="Images\b_knight_2x_ns.png" />

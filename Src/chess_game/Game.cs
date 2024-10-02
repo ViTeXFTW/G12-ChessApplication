@@ -65,6 +65,7 @@ namespace G12_ChessApplication.Src.chess_game
             IsPieceSelected = false;
         }
 
+
         public bool IsValidMove(int fromIndex, int toIndex)
         {
             ChessPiece fromPiece = gameState[fromIndex];
@@ -72,48 +73,72 @@ namespace G12_ChessApplication.Src.chess_game
 
             if (fromPiece == null)
             {
-                Trace.WriteLine($"fromPiece was null");
                 return false;
             }
 
-            // Cannot capture your own piece
             if (toPiece != null && fromPiece.ChessColor == toPiece.ChessColor)
             {
                 Trace.WriteLine($"Cannot capture own piece at {toIndex}");
                 return false;
             }
 
-            // Determine the type of the piece and validate the move
-            if (fromPiece is Pawn)
+            foreach (var validMove in fromPiece.legalMoves)
             {
-                return IsValidPawnMove(fromIndex, toIndex);
+
             }
-            else if (fromPiece is Knight)
-            {
-                return IsValidKnightMove(fromIndex, toIndex);
-            }
-            else if (fromPiece is Bishop)
-            {
-                return IsValidBishopMove(fromIndex, toIndex);
-            }
-            else if (fromPiece is Rook)
-            {
-                return IsValidRookMove(fromIndex, toIndex);
-            }
-            else if (fromPiece is Queen)
-            {
-                return IsValidQueenMove(fromIndex, toIndex);
-            }
-            else if (fromPiece is King)
-            {
-                return IsValidKingMove(fromIndex, toIndex);
-            }
-            else
-            {
-                Trace.WriteLine($"Unknown piece type at {fromIndex}");
-                return false;
-            }
+
+
         }
+
+        //public bool IsValidMove(int fromIndex, int toIndex)
+        //{
+        //    ChessPiece fromPiece = gameState[fromIndex];
+        //    ChessPiece toPiece = gameState[toIndex];
+
+        //    if (fromPiece == null)
+        //    {
+        //        Trace.WriteLine($"fromPiece was null");
+        //        return false;
+        //    }
+
+        //    // Cannot capture your own piece
+        //    if (toPiece != null && fromPiece.ChessColor == toPiece.ChessColor)
+        //    {
+        //        Trace.WriteLine($"Cannot capture own piece at {toIndex}");
+        //        return false;
+        //    }
+
+        //    // Determine the type of the piece and validate the move
+        //    if (fromPiece is Pawn)
+        //    {
+        //        return IsValidPawnMove(fromIndex, toIndex);
+        //    }
+        //    else if (fromPiece is Knight)
+        //    {
+        //        return IsValidKnightMove(fromIndex, toIndex);
+        //    }
+        //    else if (fromPiece is Bishop)
+        //    {
+        //        return IsValidBishopMove(fromIndex, toIndex);
+        //    }
+        //    else if (fromPiece is Rook)
+        //    {
+        //        return IsValidRookMove(fromIndex, toIndex);
+        //    }
+        //    else if (fromPiece is Queen)
+        //    {
+        //        return IsValidQueenMove(fromIndex, toIndex);
+        //    }
+        //    else if (fromPiece is King)
+        //    {
+        //        return IsValidKingMove(fromIndex, toIndex);
+        //    }
+        //    else
+        //    {
+        //        Trace.WriteLine($"Unknown piece type at {fromIndex}");
+        //        return false;
+        //    }
+        //}
 
         public void ApplyMove(int fromIndex, int toIndex)
         {
@@ -126,9 +151,9 @@ namespace G12_ChessApplication.Src.chess_game
         {
             ChessPiece fromPiece = gameState[fromIndex];
             ChessPiece toPiece = gameState[toIndex];
-            int fromRow = 7 - fromIndex / 8;
+            int fromRow = fromIndex / 8;
             int fromCol = fromIndex % 8;
-            int toRow = 7 - toIndex / 8;
+            int toRow = toIndex / 8;
             int toCol = toIndex % 8;
 
             int rowDiff = toRow - fromRow;
@@ -188,9 +213,9 @@ namespace G12_ChessApplication.Src.chess_game
 
         private bool IsValidKnightMove(int fromIndex, int toIndex)
         {
-            int fromRow = 7 - fromIndex / 8;
+            int fromRow = fromIndex / 8;
             int fromCol = fromIndex % 8;
-            int toRow = 7 - toIndex / 8;
+            int toRow = toIndex / 8;
             int toCol = toIndex % 8;
 
             int rowDiff = Math.Abs(toRow - fromRow);
@@ -246,9 +271,9 @@ namespace G12_ChessApplication.Src.chess_game
 
         private bool IsValidRookMove(int fromIndex, int toIndex)
         {
-            int fromRow = 7 - (fromIndex / 8);
+            int fromRow = (fromIndex / 8);
             int fromCol = fromIndex % 8;
-            int toRow = 7 - (toIndex / 8);
+            int toRow = (toIndex / 8);
             int toCol = toIndex % 8;
 
             if (fromRow == toRow)
@@ -301,9 +326,9 @@ namespace G12_ChessApplication.Src.chess_game
 
         private bool IsValidKingMove(int fromIndex, int toIndex)
         {
-            int fromRow = 7 - fromIndex / 8;
+            int fromRow = fromIndex / 8;
             int fromCol = fromIndex % 8;
-            int toRow = 7 - toIndex / 8;
+            int toRow = toIndex / 8;
             int toCol = toIndex % 8;
 
             int rowDiff = Math.Abs(toRow - fromRow);

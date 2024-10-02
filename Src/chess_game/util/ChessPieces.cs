@@ -24,6 +24,8 @@ namespace G12_ChessApplication.Src.chess_game.util
             }
             image.EndInit();
             Source = image;
+
+            legalMoves = new List<int> { 7, 8, 9 };
         }
     }
 
@@ -43,6 +45,8 @@ namespace G12_ChessApplication.Src.chess_game.util
             }
             image.EndInit();
             Source = image;
+
+            legalMoves = new List<int> {-7, 7, -9, 9 };
         }
     }
 
@@ -62,6 +66,8 @@ namespace G12_ChessApplication.Src.chess_game.util
             }
             image.EndInit();
             Source = image;
+
+            legalMoves = new List<int> {-6, 6, -10, 10, -15, 15, -17, 17 };
         }
     }
 
@@ -81,6 +87,8 @@ namespace G12_ChessApplication.Src.chess_game.util
             }
             image.EndInit();
             Source = image;
+
+            legalMoves = new List<int> { -1, 1, -8, 8 };
         }
     }
 
@@ -100,6 +108,8 @@ namespace G12_ChessApplication.Src.chess_game.util
             }
             image.EndInit();
             Source = image;
+
+            legalMoves = new List<int> { -7, 7, -9, 9, -1, 1, -8, 8 };
         }
     }
 
@@ -119,6 +129,8 @@ namespace G12_ChessApplication.Src.chess_game.util
             }
             image.EndInit();
             Source = image;
+
+            legalMoves = new List<int> { -7, 7, -9, 9, -1, 1, -8, 8 };
         }
     }
 }

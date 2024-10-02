@@ -47,7 +47,7 @@ namespace G12_ChessApplication.Src.chess_game.util
                     else
                     {
                         // Determine the color of the piece
-                        ChessColor color = char.IsUpper(c) ? ChessColor.BLACK : ChessColor.WHITE;
+                        ChessColor color = char.IsUpper(c) ? ChessColor.WHITE : ChessColor.BLACK;
                         ChessPiece piece = CreatePieceFromChar(char.ToLower(c), color);
 
                         int squareIndex = actualRank * 8 + file;
