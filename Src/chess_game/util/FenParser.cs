@@ -34,7 +34,7 @@ namespace G12_ChessApplication.Src.chess_game.util
             {
                 string rankString = ranks[rank];
                 int file = 0; // Files range from 0 (a) to 7 (h)
-                int actualRank = 7 - rank; // Map FEN rank to array index
+                int actualRank = rank; // Map FEN rank to array index
 
                 foreach (char c in rankString)
                 {
