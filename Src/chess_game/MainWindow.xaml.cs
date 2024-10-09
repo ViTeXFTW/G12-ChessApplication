@@ -22,29 +22,50 @@ namespace G12_ChessApplication
     /// </summary>
     public partial class MainWindow : Window
     {
-        private static Grid mainBoard = new ChessBoard();
+        private static ChessBoard mainBoard;
         private int? selectedSquareIndex = null;
         private Game game;
-        public MainWindow()
+        private PuzzleGame puzzleGame;
+        private string GameCode = string.Empty;
+        public string GameType { get; }
+
+
+        public MainWindow(string gameType, string code = "")
         {
             InitializeComponent();
 
+
+            if (code != "")
+            {
+                GameCode = code;
+            }
+            GameType = gameType;
+
+            game = new Game();
+            puzzleGame = new PuzzleGame(this);
             InitializeBoard();
 
-            game = new Game("Mark", "Kevin");
+
         }
 
         private void InitializeBoard()
         {
             mainBoard = new ChessBoard(500, 500);
+            //mainBoard = new ChessBoard(500, 500, puzzleGame.Puzzles.First().board);
             mainBoard.VerticalAlignment = VerticalAlignment.Top;
             mainBoard.HorizontalAlignment = HorizontalAlignment.Left;
-            Game.Children.Add(mainBoard);
-
+            GamePlane.Child = mainBoard;
             foreach (Grid square in mainBoard.Children)
             {
                 square.MouseDown += OnBoardClick;
             }
+        }
+        public void PuzzleClick(object sender, MouseButtonEventArgs e)
+        {
+            Grid square = (Grid)sender;
+            int index = mainBoard.Children.IndexOf(square);
+
+            puzzleGame.SquareClicked(index);
         }
 
 
@@ -110,7 +131,7 @@ namespace G12_ChessApplication
             }
         }
 
-        private void HighlightSquare(int index)
+        public void HighlightSquare(int index)
         {
             Grid square = (Grid)mainBoard.Children[index];
             Rectangle squareColor = (Rectangle)square.Children[0];
@@ -118,7 +139,7 @@ namespace G12_ChessApplication
             squareColor.Fill = Brushes.IndianRed;
         }
 
-        private void ResetSquareColor(int index)
+        public void ResetSquareColor(int index)
         {
             Grid square = (Grid)mainBoard.Children[index];
             Rectangle squareColor = (Rectangle)square.Children[0];
@@ -131,7 +152,7 @@ namespace G12_ChessApplication
             squareColor.Fill = isLightSquare ? Brushes.Beige : Brushes.DarkGreen;
         }
 
-        private void UpdateUIAfterMove(int fromIndex, int toIndex)
+        public void UpdateUIAfterMove(int fromIndex, int toIndex)
         {
             Grid squareFrom = (Grid)mainBoard.Children[fromIndex];
             Grid squareTo = (Grid)mainBoard.Children[toIndex];
@@ -155,5 +176,10 @@ namespace G12_ChessApplication
 
         }
 
+        private void RepeatPuzzle_Click(object sender, RoutedEventArgs e)
+        {
+            mainBoard.ResetBoard();
+            puzzleGame.RepeatPuzzle();
+        }
     }
 }

@@ -6,5 +6,12 @@
         xmlns:local="clr-namespace:G12_ChessApplication"
         mc:Ignorable="d"
         Title="MainWindow" Height="800" Width="800">
-    <Grid x:Name="Game"/>
+    <Grid x:Name="Game">
+        <StackPanel Margin="0,0,600,0">
+            <Button x:Name="NextPuzzle" Content="Next Puzzle"/>
+            <Button x:Name="RepeatPuzzle" Content="Repeat Puzzle" Click="RepeatPuzzle_Click"/>
+            <Button Content="Button"/>
+        </StackPanel>
+        <Border x:Name="GamePlane" BorderBrush="Black" BorderThickness="1" Margin="200,0,0,0"/>
+    </Grid>
 </Window>

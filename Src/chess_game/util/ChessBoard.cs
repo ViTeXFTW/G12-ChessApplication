@@ -28,16 +28,17 @@ namespace G12_ChessApplication.Src.chess_game.util
             {'P', () => new Pawn(ChessColor.WHITE)}    // White pawn
         };
 
-        string defualtBoard = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
-        string ranPos = "r1bk3r/p2pBpNp/n4n2/1p1NP2P/6P1/3P4/P1P1K3/q5b1";
-        public ChessBoard(double height = 640, double width = 640)
+        string BoardSetup = "r1bk3r/p2pBpNp/n4n2/1p1NP2P/6P1/3P4/P1P1K3/q5b1";
+
+        public ChessBoard( double height = 640, double width = 640, string pieceLayout = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR")
         {
             Height = height;
             Width = width;
 
             DefualtBoard();
-            BoardSetup(defualtBoard);
+            SetBoardSetup(pieceLayout);
         }
+
 
         private void DefualtBoard()
         {
@@ -78,8 +79,9 @@ namespace G12_ChessApplication.Src.chess_game.util
             }
         }
 
-        private void BoardSetup(string layout)
+        private void SetBoardSetup(string layout)
         {
+            BoardSetup = layout;
             double chessPieceHeight = Height / 8 * 0.9;
             double chessPieceWidth = Width / 8 * 0.9;
 
@@ -102,6 +104,26 @@ namespace G12_ChessApplication.Src.chess_game.util
                     squareIndex++;
                 }
 
+            }
+        }
+
+        public void ResetBoard()
+        {
+            RemovePieces();
+            SetBoardSetup(BoardSetup);
+        }
+
+        private void RemovePieces()
+        {
+            foreach (Grid square in Children)
+            {
+                for (int i = 0; i < square.Children.Count; i++)
+                {
+                    if (square.Children[i] is ChessPiece)
+                    {
+                        square.Children.Remove(square.Children[i]);
+                    }
+                }
             }
         }
     }

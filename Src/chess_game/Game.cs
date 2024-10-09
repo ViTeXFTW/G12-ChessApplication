@@ -21,12 +21,12 @@ namespace G12_ChessApplication.Src.chess_game
         public bool IsPieceSelected { get; set; }
         public int SelectedPieceIndex { get; set; }
 
-        private ChessPiece[] gameState = new ChessPiece[64];
+        public ChessPiece[] gameState = new ChessPiece[64];
 
-        public Game(string whitePlayerName, string blackPlayerName)
+        public Game()
         {
-            whitePlayer = new Player(whitePlayerName, ChessColor.WHITE);
-            blackPlayer = new Player(blackPlayerName, ChessColor.BLACK);
+            whitePlayer = new Player("Mark", ChessColor.WHITE);
+            blackPlayer = new Player("Kevin", ChessColor.BLACK);
             currentPlayer = whitePlayer;
             userPlayer = whitePlayer;
             gameState = FenParser.CreatePieceArray();
