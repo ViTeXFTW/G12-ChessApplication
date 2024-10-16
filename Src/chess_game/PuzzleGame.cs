@@ -12,13 +12,11 @@ namespace G12_ChessApplication.Src.chess_game
         public List<ChessPuzzle> Puzzles { get; set; } = new List<ChessPuzzle>();
 
         public ChessPuzzle CurrentPuzzle { get; set; }
-        public MainWindow mainWindow { get; set; }
         private int FromSquareIndex { get; set; } = -1;
         private int ToSquareIndex { get; set; } = -1;
         public bool puzzleIsActive { get; set; } = true;
-        public PuzzleGame(MainWindow main)
+        public PuzzleGame(MainWindow main, ChessColor chessColor) : base(main, chessColor)
         {
-            mainWindow = main;
             ChessPuzzle chessPuzzle = new ChessPuzzle();
             chessPuzzle.board = "4r1rk/5K1b/7R/R7/8/8/8/8";
             chessPuzzle.enemyMoves.Add(Tuple.Create(7, 15));
@@ -29,10 +27,12 @@ namespace G12_ChessApplication.Src.chess_game
 
             CurrentPuzzle = new ChessPuzzle(chessPuzzle);
 
-            gameState = FenParser.CreatePieceArray("4r1rk/5K1b/7R/R7/8/8/8/8");
+            gameState = FenParser.CreatePieceArray(colorFacing,CurrentPuzzle.board);
+
+            MainWindow.mainBoard.SetBoardSetup(CurrentPuzzle.board);
         }
 
-        public void SquareClicked(int index)
+        public override void SquareClicked(int index)
         {
             if (puzzleIsActive == false)
                 { return; }
@@ -72,7 +72,6 @@ namespace G12_ChessApplication.Src.chess_game
 
         public void StartNextPuzzle()
         {
-            CurrentPuzzle = Puzzles.First();
             puzzleIsActive = true;
         }
 

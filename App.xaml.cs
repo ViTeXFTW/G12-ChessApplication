@@ -77,7 +77,7 @@ namespace G12_ChessApplication
                     init_game(e.Code, "play");
                     break;
                 case "Puzzles":
-                    init_game(e.Code, "puzzles");
+                    init_game("Host", "puzzles");
                     break;
                 case "Settings":
                     break;
@@ -95,7 +95,26 @@ namespace G12_ChessApplication
         private void init_game(string code, string gameType)
         {
             var gameWindow = new MainWindow(gameType, code);
+            gameWindow.goBack += BackFromGame;
             gameWindow.Show();
+        }
+
+        private void BackFromGame(object sender, EventArgs e)
+        {
+            // Close the game window
+            if (sender is Window gameWindow)
+            {
+                gameWindow.Hide();
+            }
+
+            // Show the main menu window
+            init_mainmenu();
+
+            // Close the game window
+            if (sender is Window gameWindowToClose)
+            {
+                gameWindowToClose.Close();
+            }
         }
     }
 

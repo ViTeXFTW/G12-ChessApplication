@@ -5,13 +5,29 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:G12_ChessApplication"
         mc:Ignorable="d"
-        Title="MainWindow" Height="800" Width="800">
+        Title="MainWindow" Height="700" Width="1000">
     <Grid x:Name="Game">
-        <StackPanel Margin="0,0,600,0">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1*" />
+            <ColumnDefinition Width="5*" />
+        </Grid.ColumnDefinitions>
+        <StackPanel VerticalAlignment="Top">
             <Button x:Name="NextPuzzle" Content="Next Puzzle"/>
             <Button x:Name="RepeatPuzzle" Content="Repeat Puzzle" Click="RepeatPuzzle_Click"/>
-            <Button Content="Button"/>
+            <Button Content="Button" Click="Button_Click"/>
+            <Button Content="Go back" Click="Button_Click_1" />
         </StackPanel>
-        <Border x:Name="GamePlane" BorderBrush="Black" BorderThickness="1" Margin="200,0,0,0"/>
+        <Grid x:Name="GameGrid" Grid.Column="1">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*" />
+                <ColumnDefinition Width="5*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="5*" />
+                <RowDefinition Height="1*" />
+            </Grid.RowDefinitions>
+        </Grid>
+
     </Grid>
 </Window>

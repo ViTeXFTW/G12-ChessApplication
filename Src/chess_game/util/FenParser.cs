@@ -9,7 +9,7 @@ namespace G12_ChessApplication.Src.chess_game.util
 {
     public static class FenParser
     {
-        public static ChessPiece[] CreatePieceArray(string fenString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR")
+        public static ChessPiece[] CreatePieceArray(int colorFacing = 1, string fenString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR")
         {
             ChessPiece[] board = new ChessPiece[64];
 
@@ -33,8 +33,8 @@ namespace G12_ChessApplication.Src.chess_game.util
             for (int rank = 0; rank < 8; rank++)
             {
                 string rankString = ranks[rank];
-                int file = 0; // Files range from 0 (a) to 7 (h)
-                int actualRank = rank; // Map FEN rank to array index
+                int file = (colorFacing == 1) ? 0 : 7; // Files range from 0 (a) to 7 (h)
+                int actualRank = (colorFacing == 1) ? rank : Math.Abs(rank - 7); // Map FEN rank to array index
 
                 foreach (char c in rankString)
                 {
@@ -42,7 +42,7 @@ namespace G12_ChessApplication.Src.chess_game.util
                     {
                         // Empty squares
                         int emptySquares = c - '0';
-                        file += emptySquares; // Move file pointer
+                        file += emptySquares * colorFacing; // Move file pointer
                     }
                     else
                     {
@@ -53,18 +53,13 @@ namespace G12_ChessApplication.Src.chess_game.util
                         int squareIndex = actualRank * 8 + file;
                         board[squareIndex] = piece;
 
-                        file++; // Move to the next file
+                        file += 1 * colorFacing; // Move to the next file
                     }
 
                     if (file > 8)
                     {
                         throw new ArgumentException("Invalid FEN string: Too many squares in rank");
                     }
-                }
-
-                if (file != 8)
-                {
-                    throw new ArgumentException("Invalid FEN string: Not enough squares in rank");
                 }
             }
 
@@ -90,6 +85,77 @@ namespace G12_ChessApplication.Src.chess_game.util
                 default:
                     throw new ArgumentException($"Invalid piece type '{pieceChar}' in FEN string");
             }
+        }
+
+        public static string GetFenStringFromArray(ChessPiece[] gameState, int colorfacing)
+        {
+            string fenString = "";
+            int emptySpaces = 0;
+            int counter = 0;
+            foreach (ChessPiece piece in gameState)
+            {
+                if (piece == null)
+                {
+                    emptySpaces++;
+                }
+                else
+                {
+                    if (emptySpaces > 0)
+                    {
+                        fenString += emptySpaces.ToString();
+                        emptySpaces = 0;
+                    }
+                    string newPieceStr = GetCharFromPiece(piece).ToString();
+                    fenString += newPieceStr;
+                }
+                if (counter % 8 == 7)
+                {
+                    if (emptySpaces > 0)
+                    {
+                        fenString += emptySpaces.ToString();
+                        emptySpaces = 0;
+                    }
+                    fenString += "/";
+                }
+                counter++;
+            }
+            return fenString;
+        }
+        private static char GetCharFromPiece(ChessPiece piece)
+        {
+            char ch; 
+            switch (piece)
+            {
+                case Pawn:
+                    ch = 'p';
+                    break;
+                case Knight:
+                    ch = 'n';
+                    break;
+                case Bishop:
+                    ch = 'b';
+                    break;
+                case Rook:
+                    ch = 'r';
+                    break;
+                case Queen:
+                    ch = 'q';
+                    break;
+                case King:
+                    ch = 'k';
+                    break;
+                default:
+                    ch = ' ';
+                    break;
+
+            }
+            if (piece.ChessColor == ChessColor.WHITE)
+            {
+                ch = char.ToUpper(ch);
+            }
+            
+            return ch;
+
         }
     }
 }

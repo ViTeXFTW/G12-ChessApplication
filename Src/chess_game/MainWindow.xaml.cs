@@ -22,113 +22,69 @@ namespace G12_ChessApplication
     /// </summary>
     public partial class MainWindow : Window
     {
-        private static ChessBoard mainBoard;
-        private int? selectedSquareIndex = null;
+        public event EventHandler goBack;
+        public static ChessBoard mainBoard;
         private Game game;
-        private PuzzleGame puzzleGame;
         private string GameCode = string.Empty;
+        private ChessColor color = ChessColor.WHITE;
+        private int colorFacing = 1;
         public string GameType { get; }
 
 
         public MainWindow(string gameType, string code = "")
         {
             InitializeComponent();
-
-
+            
             if (code != "")
             {
                 GameCode = code;
+                if (code != "Host")
+                {
+                    color = ChessColor.BLACK;
+                    colorFacing = -1;
+                }
             }
             GameType = gameType;
 
-            game = new Game();
-            puzzleGame = new PuzzleGame(this);
             InitializeBoard();
-
+            SetupGameType();
 
         }
 
-        private void InitializeBoard()
+        private void SetupGameType()
         {
-            mainBoard = new ChessBoard(500, 500);
-            //mainBoard = new ChessBoard(500, 500, puzzleGame.Puzzles.First().board);
-            mainBoard.VerticalAlignment = VerticalAlignment.Top;
-            mainBoard.HorizontalAlignment = HorizontalAlignment.Left;
-            GamePlane.Child = mainBoard;
+            switch(GameType)
+            {
+                case "play":
+                    game = new PlayerGame(this, GameCode, color);
+                    break;
+                case "puzzles":
+                    game = new PuzzleGame(this, color);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        private void InitializeBoard(string board = "")
+        {
+            mainBoard = new ChessBoard(colorFacing, 500, 500);
+            //mainBoard.VerticalAlignment = VerticalAlignment.Top;
+            //mainBoard.HorizontalAlignment = HorizontalAlignment.Left;
             foreach (Grid square in mainBoard.Children)
             {
                 square.MouseDown += OnBoardClick;
             }
+            GameGrid.Children.Add(mainBoard);
+            Grid.SetColumn(mainBoard, 1);
+            Grid.SetRow(mainBoard, 0);
         }
-        public void PuzzleClick(object sender, MouseButtonEventArgs e)
-        {
-            Grid square = (Grid)sender;
-            int index = mainBoard.Children.IndexOf(square);
-
-            puzzleGame.SquareClicked(index);
-        }
-
 
         private void OnBoardClick(object sender, MouseButtonEventArgs e)
         {
             Grid square = (Grid)sender;
             int index = mainBoard.Children.IndexOf(square);
-            if (index != -1 && game.currentPlayer == game.whitePlayer || game.currentPlayer == game.blackPlayer)
-            {
-                HandlePlayerMove(index);
-            }
-        }
-
-        private void HandlePlayerMove(int index)
-        {
-            if (game.IsPieceSelected)
-            {
-                if (game.IsValidMove(game.SelectedPieceIndex, index))
-                {
-                    // Apply the move
-                    game.ApplyMove(game.SelectedPieceIndex, index);
-                    UpdateUIAfterMove(game.SelectedPieceIndex, index);
-
-                    // Reset the color of the previously selected square
-                    ResetSquareColor(game.SelectedPieceIndex);
-                    selectedSquareIndex = null;
-
-                    // Switch to the next player
-                    game.currentPlayer = game.currentPlayer == game.whitePlayer ? game.blackPlayer : game.whitePlayer;
-                    Trace.WriteLine($"Changed player to {game.currentPlayer.Color}");
-                }
-                else
-                {
-
-                    // Invalid move, deselect the piece
-                    game.DeselectPiece();
-
-                    // Optionally update UI to reflect deselection
-
-                    ResetSquareColor(game.SelectedPieceIndex);
-                    selectedSquareIndex = null;
-                }
-            }
-            else
-            {
-                if (game.CanSelectPieceAt(index))
-                {
-                    // Deselect the previous selection if any
-                    if (selectedSquareIndex != null)
-                    {
-                        ResetSquareColor(selectedSquareIndex.Value);
-                    }
-
-                    // Select the piece
-                    game.SelectPieceAt(index);
-
-                    // Highlight the selected square
-                    HighlightSquare(index);
-
-                    // Keep track of the selected square index
-                    selectedSquareIndex = index;
-                }
-            }
+            game.SquareClicked(index);
         }
 
         public void HighlightSquare(int index)
@@ -179,7 +135,22 @@ namespace G12_ChessApplication
         private void RepeatPuzzle_Click(object sender, RoutedEventArgs e)
         {
             mainBoard.ResetBoard();
+            PuzzleGame puzzleGame = (PuzzleGame) game;
             puzzleGame.RepeatPuzzle();
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            Trace.WriteLine(FenParser.GetFenStringFromArray(game.gameState, game.colorFacing));
+        }
+
+        private void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+            if (game is PlayerGame playerGame)
+            {
+                playerGame.CleanUpSockets();
+            }
+            goBack?.Invoke(this, EventArgs.Empty);
         }
     }
 }

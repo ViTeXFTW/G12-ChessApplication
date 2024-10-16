@@ -10,7 +10,7 @@ using System.Windows.Shapes;
 
 namespace G12_ChessApplication.Src.chess_game.util
 {
-    internal class ChessBoard : Grid
+    public class ChessBoard : Grid
     {
         Dictionary<char, Func<ChessPiece>> charToPieceConverter = new Dictionary<char, Func<ChessPiece>>
         {
@@ -29,12 +29,13 @@ namespace G12_ChessApplication.Src.chess_game.util
         };
 
         string BoardSetup = "r1bk3r/p2pBpNp/n4n2/1p1NP2P/6P1/3P4/P1P1K3/q5b1";
+        public int color = 1; // White is 1, black is -1, decides which way the board is facing
 
-        public ChessBoard( double height = 640, double width = 640, string pieceLayout = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR")
+        public ChessBoard(int color, double height = 640, double width = 640, string pieceLayout = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR")
         {
             Height = height;
             Width = width;
-
+            this.color = color;
             DefualtBoard();
             SetBoardSetup(pieceLayout);
         }
@@ -79,19 +80,20 @@ namespace G12_ChessApplication.Src.chess_game.util
             }
         }
 
-        private void SetBoardSetup(string layout)
+        public void SetBoardSetup(string layout)
         {
+            RemovePieces();
             BoardSetup = layout;
             double chessPieceHeight = Height / 8 * 0.9;
             double chessPieceWidth = Width / 8 * 0.9;
 
-            int squareIndex = 0;
+            int squareIndex = (color == 1) ? 0 : 63;
             foreach (char item in layout)
             {
                 if (char.IsDigit(item))
                 {
                     int emptySquares = Convert.ToInt32(item.ToString());
-                    squareIndex += emptySquares;
+                    squareIndex += emptySquares * color;
                 }
                 else if (charToPieceConverter.TryGetValue(item, out Func<ChessPiece> createPiece))
                 {
@@ -101,7 +103,7 @@ namespace G12_ChessApplication.Src.chess_game.util
                     Grid square = Children[squareIndex] as Grid;
                     square.Children.Add(newPiece);
 
-                    squareIndex++;
+                    squareIndex += 1 * color;
                 }
 
             }

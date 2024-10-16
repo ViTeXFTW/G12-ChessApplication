@@ -35,12 +35,18 @@ namespace G12_ChessApplication
         private void JoinGameBtn_Click(object sender, RoutedEventArgs e)
         {
             string code = CodeBox.Text;
+            code += "oy";
             if(code == string.Empty)
             {
                 MessageBox.Show("Enter code to join");
                 return;
             }
-            OptionSelected?.Invoke(this, new OptionSelectedEventArgs { SelectedOption = "PlayChess", Code = code });
+            OptionSelected?.Invoke(this, new OptionSelectedEventArgs { SelectedOption = "JoinGame", Code = code });
+        }
+
+        private void PuzzlesBtn_Click(object sender, RoutedEventArgs e)
+        {
+            OptionSelected?.Invoke(this, new OptionSelectedEventArgs { SelectedOption = "Puzzles" });
         }
     }
 

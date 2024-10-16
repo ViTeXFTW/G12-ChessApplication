@@ -12,7 +12,6 @@ namespace G12_ChessApplication.Src.chess_game.util
 {
     class Pawn : ChessPiece
     {
-        private bool firstMove = true;
         public Pawn(ChessColor color) : base(color)
         {
             string colorLetter = (ChessColor == ChessColor.WHITE) ? "w" : "b";
@@ -39,10 +38,12 @@ namespace G12_ChessApplication.Src.chess_game.util
             int colDiff = toCol - fromCol;
 
             int playerSign = -1;
+            int startRow = 6;
 
             if (fromPiece.ChessColor != Game.userPlayer.Color)
             {
                 playerSign = 1;
+                startRow = 1;
             }
 
             // Forward movement
@@ -53,14 +54,12 @@ namespace G12_ChessApplication.Src.chess_game.util
                 if (rowDiff == (1 * playerSign) && toPiece == null)
                 {
                     Trace.WriteLine("Forward 1 square");
-                    firstMove = false;
                     return true;
                 }
                 // Move forward two squares from starting position
-                if (rowDiff == (2 * playerSign) && firstMove && toPiece == null && gameState[(fromRow + (1 * playerSign)) * 8 + fromCol] == null)
+                if (rowDiff == (2 * playerSign) && fromRow == startRow && toPiece == null && gameState[(fromRow + (1 * playerSign)) * 8 + fromCol] == null)
                 {
                     Trace.WriteLine("Forward 2 square");
-                    firstMove = false;
                     return true;
                 }
             }
@@ -68,7 +67,6 @@ namespace G12_ChessApplication.Src.chess_game.util
             else if (Math.Abs(colDiff) == 1 && rowDiff == (1 * playerSign) && toPiece != null)
             {
                 Trace.WriteLine("Diagonal attack");
-                firstMove = false;
                 return true;
             }
 

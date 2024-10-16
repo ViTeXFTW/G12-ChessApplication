@@ -12,24 +12,30 @@ using System.Windows.Input;
 
 namespace G12_ChessApplication.Src.chess_game
 {
-    public class Game
+    public abstract class Game
     {
-        public Player whitePlayer {  get; set; }
-        public Player blackPlayer { get; set; }
-        public Player currentPlayer { get; set; }
         public static Player userPlayer { get; set; }
         public bool IsPieceSelected { get; set; }
         public int SelectedPieceIndex { get; set; }
 
         public ChessPiece[] gameState = new ChessPiece[64];
+        public MainWindow mainWindow { get; set; }
+        public int colorFacing { get; set; }
 
-        public Game()
+        public bool turnToMove { get; set; } = true;
+        public Game(MainWindow main, ChessColor chessColor)
         {
-            whitePlayer = new Player("Mark", ChessColor.WHITE);
-            blackPlayer = new Player("Kevin", ChessColor.BLACK);
-            currentPlayer = whitePlayer;
-            userPlayer = whitePlayer;
-            gameState = FenParser.CreatePieceArray();
+            mainWindow = main;
+            userPlayer = new Player("User", chessColor);
+            colorFacing = (chessColor == ChessColor.WHITE) ? 1 : -1;
+            gameState = FenParser.CreatePieceArray(colorFacing);
+        }
+
+        public abstract void SquareClicked(int index);
+
+        public void SetGameState(string board)
+        {
+            gameState = FenParser.CreatePieceArray(colorFacing, board);
         }
 
         public bool CanSelectPieceAt(int index)
@@ -46,15 +52,12 @@ namespace G12_ChessApplication.Src.chess_game
 
             Trace.WriteLine($"Selected Piece: {piece}, {pieceColor}");
 
-            if (pieceColor == ChessColor.BLACK && currentPlayer == blackPlayer)
+            if (!turnToMove || pieceColor != userPlayer.Color)
             {
-                return true;
+                return false;
             }
-            if (pieceColor == ChessColor.WHITE && currentPlayer == whitePlayer)
-            {
-                return true;
-            }
-            return false;
+
+            return true;
         }
 
         public void SelectPieceAt(int index)
@@ -95,5 +98,6 @@ namespace G12_ChessApplication.Src.chess_game
             gameState[fromIndex] = null;
             DeselectPiece();
         }
+
     }
 }
