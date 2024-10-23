@@ -54,5 +54,10 @@ namespace G12_ChessApplication
             InitializeComponent();
             LeaderBoardGrid.ItemsSource = LeaderboardEntry.GetLeaderboardEntries();
         }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }
