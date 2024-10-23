@@ -76,8 +76,6 @@ namespace G12_ChessApplication
                 square.MouseDown += OnBoardClick;
             }
             GameGrid.Children.Add(mainBoard);
-            Grid.SetColumn(mainBoard, 1);
-            Grid.SetRow(mainBoard, 0);
         }
 
         private void OnBoardClick(object sender, MouseButtonEventArgs e)
