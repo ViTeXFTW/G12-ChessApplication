@@ -27,6 +27,9 @@ namespace G12_ChessApplication
         public int Draws { get; set; }
         public int TotalGames { get; set; }
 
+        
+        private SQLConnector dbConnector;
+
         public LeaderboardEntry(string username, int wins, int losses, int draws)
         {
             this.Username = username;
@@ -49,15 +52,24 @@ namespace G12_ChessApplication
 
     public partial class Leaderboard : Window
     {
+        private SQLConnector dbConnector;
         public Leaderboard()
         {
             InitializeComponent();
+            dbConnector = new SQLConnector();
+            LoadLeaderboard();
             LeaderBoardGrid.ItemsSource = LeaderboardEntry.GetLeaderboardEntries();
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private async void Button_Click(object sender, RoutedEventArgs e)
         {
-
+            await dbConnector.AddMatchResult("John", "Bent" , 1);
+        }
+        
+        private async void LoadLeaderboard()
+        {
+            var leaderboardEntries = await dbConnector.GetLeaderboard();
+            LeaderBoardGrid.ItemsSource = leaderboardEntries;
         }
     }
 }
