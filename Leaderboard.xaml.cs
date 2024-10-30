@@ -64,7 +64,7 @@ namespace G12_ChessApplication
         {
             try
             {
-                await dbConnector.AddOrUpdateMatchResult("makki12", "Aslan", 0);
+                await dbConnector.AddOrUpdateMatchResult("Magnus69", "Aslan", 1);
                 LoadLeaderboard();
             }
             catch (Exception ex) 
@@ -76,7 +76,9 @@ namespace G12_ChessApplication
         private async void LoadLeaderboard()
         {
             var leaderboardEntries = await dbConnector.GetLeaderboard();
+            var matchhistory = await dbConnector.GetMatchHistory("Aslan");
             LeaderBoardGrid.ItemsSource = leaderboardEntries;
+            MatchHistoryGrid.ItemsSource = matchhistory;
         }
     }
 }

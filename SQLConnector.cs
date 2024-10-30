@@ -182,7 +182,6 @@ public class SQLConnector
     {
         using (var context = new AppDbContext())
         {
-
             var leaderboardData = await context.Login
                 .Select(user => new
                 {
@@ -199,10 +198,33 @@ public class SQLConnector
                 entry.Wins,
                 entry.Losses,
                 entry.Draws
-            )).ToList();
-            
-            
+            )).ToList(); 
         }
     }
 
+    public async Task<List<LeaderboardEntry>> GetMatchHistory(string username)
+    {
+        using (var context = new AppDbContext())
+        {
+            var matchHistory = await context.Matches
+                .Where(m => m.P1_username == username || m.P2_username == username)
+                .GroupBy(m => m.P1_username == username ? m.P2_username : m.P1_username) // Group by opponent's username
+                .Select(g => new
+                {
+                    Opponent = g.Key,
+                    Wins = g.Sum(m => m.P1_username == username ? m.P1_wins : m.P2_wins),
+                    Losses = g.Sum(m => m.P1_username == username ? m.P2_wins : m.P1_wins),
+                    Draws = g.Sum(m => m.Draws)
+                })
+                .ToListAsync();
+
+            // Convert the aggregated data to a list of LeaderboardEntry objects
+            return matchHistory.Select(entry => new LeaderboardEntry(
+                entry.Opponent,
+                entry.Wins,
+                entry.Losses,
+                entry.Draws
+            )).ToList();
+        }
+    }
 }
