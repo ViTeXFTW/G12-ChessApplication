@@ -38,16 +38,6 @@ namespace G12_ChessApplication
             this.Draws = draws;
             this.TotalGames = wins + losses + draws;
         }
-
-        public static List<LeaderboardEntry> GetLeaderboardEntries()
-        {
-            return new List<LeaderboardEntry>(new LeaderboardEntry[4] {
-                new LeaderboardEntry("User1", 10, 5, 2),
-                new LeaderboardEntry("User2", 8, 7, 2),
-                new LeaderboardEntry("User3", 6, 9, 2),
-                new LeaderboardEntry("User4", 4, 11, 2)
-            });
-        }
     }
 
     public partial class Leaderboard : Window
