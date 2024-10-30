@@ -2,6 +2,9 @@
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 using G12_ChessApplication;
+using System.ComponentModel.DataAnnotations.Schema;
+using Org.BouncyCastle.Security;
+using static SQLConnector;
 
 public class SQLConnector
 {
@@ -55,24 +58,34 @@ public class SQLConnector
             return "Account created successfully! You can now log in.";
         }
     }
-    
+
 
     public class User
     {
         [Key]
         public string Username { get; set; }
         public string Passw { get; set; }
-        public ICollection<Match> Matches { get; set; }
+
+        // Navigation property for matches as Player 1
+        public ICollection<Match> MatchesAsP1 { get; set; }
+
+        // Navigation property for matches as Player 2
+        public ICollection<Match> MatchesAsP2 { get; set; }
     }
-    
+
     public class Match
     {
-        [Key]
-        public int Id { get; set; }
-        public string User { get; set; }
-        public string Opponent { get; set; }
-        public int Result { get; set; }
-        public User UserNavigation { get; set; }
+        // Reference to User for P1
+        public string P1_username { get; set; }
+        public User P1 { get; set; }
+
+        // Reference to User for P2
+        public string P2_username { get; set; }
+        public User P2 { get; set; }
+
+        public int P1_wins { get; set; }
+        public int P2_wins { get; set; }
+        public int Draws { get; set; }
     }
 
     public class AppDbContext : DbContext
@@ -88,17 +101,27 @@ public class SQLConnector
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // Configure primary key for User
             modelBuilder.Entity<User>()
                 .HasKey(u => u.Username);
-            modelBuilder.Entity<Match>()
-                .HasKey(m => m.Id);
 
-            // Configure the foreign key relationship
+            // Configure primary key for Match
             modelBuilder.Entity<Match>()
-                .HasOne(m => m.UserNavigation)
-                .WithMany(u => u.Matches)
-                .HasForeignKey(m => m.User)
-                .OnDelete(DeleteBehavior.Cascade);
+                .HasKey(m => new { m.P1_username, m.P2_username });
+
+            // Configure foreign key relationship between Match.P1Username and User.Username
+            modelBuilder.Entity<Match>()
+                .HasOne(m => m.P1)
+                .WithMany(u => u.MatchesAsP1)
+                .HasForeignKey(m => m.P1_username)
+                .OnDelete(DeleteBehavior.Restrict); // Prevent cascading delete to avoid circular references
+
+            // Configure foreign key relationship between Match.P2Username and User.Username
+            modelBuilder.Entity<Match>()
+                .HasOne(m => m.P2)
+                .WithMany(u => u.MatchesAsP2)
+                .HasForeignKey(m => m.P2_username)
+                .OnDelete(DeleteBehavior.Restrict);
 
             // Seed the database with an admin and a test user
             modelBuilder.Entity<User>().HasData(
@@ -107,40 +130,69 @@ public class SQLConnector
             );
         }
     }
-    
-    public async Task AddMatchResult(string user, string opponent, int result)
+
+
+    public async Task AddOrUpdateMatchResult(string P1Username, string P2Username, int result)
     {
         using (var context = new AppDbContext())
         {
-            var match = new Match
-            {
-                User = user,
-                Opponent = opponent,
-                Result = result
-            };
 
-            context.Matches.Add(match);
+            // Check that both users exist
+            var player1 = await context.Login.FindAsync(P1Username);
+            var player2 = await context.Login.FindAsync(P2Username);
+
+            if (player1 == null || player2 == null)
+            {
+                throw new Exception("One or both users do not exist.");
+            }
+
+            // Try to find an existing match between the two players
+            var match = await context.Matches
+                .FirstOrDefaultAsync(m => (m.P1_username == P1Username && m.P2_username == P2Username) || 
+                (m.P1_username == P2Username && m.P2_username == P1Username));
+
+            if (match == null)
+            {
+                // If no match exists, create a new entry
+                match = new Match
+                {
+                    P1_username = P1Username,
+                    P2_username = P2Username,
+                    P1_wins = result == 1 ? 1 : 0,
+                    P2_wins = result == 2 ? 1 : 0,
+                    Draws = result == 0 ? 1 : 0
+                };
+                context.Matches.Add(match);
+            }
+            else
+            {
+                // If match exists, update the result
+                if (result == 1) match.P1_wins++;
+                else if (result == 2) match.P2_wins++;
+                else if (result == 0) match.Draws++;
+            }
+
+            // Save changes to the database
             await context.SaveChangesAsync();
         }
     }
-    
+
+
     public async Task<List<LeaderboardEntry>> GetLeaderboard()
     {
         using (var context = new AppDbContext())
         {
-            // Aggregate match results to calculate wins, losses, and draws for each user
-            var leaderboardData = await context.Matches
-                .GroupBy(m => m.User)
-                .Select(g => new
+
+            var leaderboardData = await context.Login
+                .Select(user => new
                 {
-                    Username = g.Key,
-                    Wins = g.Count(m => m.Result == 2),
-                    Losses = g.Count(m => m.Result == 1),
-                    Draws = g.Count(m => m.Result == 0),
-                    TotalGames = g.Count()
+                    Username = user.Username,
+                    Wins = user.MatchesAsP1.Sum(m => m.P1_wins) + user.MatchesAsP2.Sum(m => m.P2_wins),
+                    Losses = user.MatchesAsP1.Sum(m => m.P2_wins) + user.MatchesAsP2.Sum(m => m.P1_wins),
+                    Draws = user.MatchesAsP1.Sum(m => m.Draws) + user.MatchesAsP2.Sum(m => m.Draws)
                 })
                 .ToListAsync();
-
+         
             // Convert the aggregated data to a list of LeaderboardEntry objects
             return leaderboardData.Select(entry => new LeaderboardEntry(
                 entry.Username,
@@ -148,11 +200,9 @@ public class SQLConnector
                 entry.Losses,
                 entry.Draws
             )).ToList();
+            
+            
         }
     }
-    
-    
-    
-    
-    
+
 }

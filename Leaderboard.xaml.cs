@@ -58,12 +58,19 @@ namespace G12_ChessApplication
             InitializeComponent();
             dbConnector = new SQLConnector();
             LoadLeaderboard();
-            LeaderBoardGrid.ItemsSource = LeaderboardEntry.GetLeaderboardEntries();
         }
 
         private async void Button_Click(object sender, RoutedEventArgs e)
         {
-            await dbConnector.AddMatchResult("John", "Bent" , 1);
+            try
+            {
+                await dbConnector.AddOrUpdateMatchResult("makki12", "Aslan", 0);
+                LoadLeaderboard();
+            }
+            catch (Exception ex) 
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
         
         private async void LoadLeaderboard()
