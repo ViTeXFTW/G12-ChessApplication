@@ -8,6 +8,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
@@ -70,20 +71,13 @@ namespace G12_ChessApplication.Src.chess_game
 
         private void ReceiveMessages()
         {
-            byte[] buffer = new byte[1024];
-            int bytesRead;
 
             while (true)
             {
                 try
                 {
-                    bytesRead = _stream.Read(buffer, 0, buffer.Length);
-                    if (bytesRead == 0)
-                        break;
-
-                    string message = Encoding.ASCII.GetString(buffer, 0, bytesRead);
-                    Trace.WriteLine($"Server: {message}\n");
-                    HandleMessage(message);
+                    Move oppMove = ReceiveObject(_stream);
+                    HandleMessage(oppMove);
                 }
                 catch
                 {
@@ -124,51 +118,21 @@ namespace G12_ChessApplication.Src.chess_game
             {
                 TcpClient client = _server.AcceptTcpClient();
                 _stream = client.GetStream();
-                _clientThread = new Thread(HandleClientComm);
+                _clientThread = new Thread(ReceiveMessages);
                 _clientThread.IsBackground = true;
                 _clientThread.Start();
             }
         }
 
-        private void HandleClientComm()
+        private void HandleMessage(Move move)
         {
-            byte[] buffer = new byte[1024];
-            int bytesRead;
 
-            while (true)
-            {
-                try
-                {
-                    bytesRead = _stream.Read(buffer, 0, buffer.Length);
-                    if (bytesRead == 0)
-                        break;
-
-                    string message = Encoding.ASCII.GetString(buffer, 0, bytesRead);
-                    HandleMessage(message);
-                }
-                catch
-                {
-                    Trace.WriteLine("Client disconnected.");
-                    break;
-                }
-            }
-        }
-
-        private void HandleMessage(string message)
-        {
-            string[] fields = message.Split(' ');
-            int[] indexes = new int[2];
-            for (int i = 0; i < fields.Length; i++)
-            {
-                indexes[i] = GetDigit(fields[i]);
-            }
-
-            Trace.WriteLine($"Client: {message}\n");
+            Trace.WriteLine($"Client: {move}\n");
             Application.Current.Dispatcher.BeginInvoke(
               DispatcherPriority.Background,
                 new Action(() => {
-                    ApplyMove(indexes[0], indexes[1]);
-                    mainWindow.UpdateUIAfterMove(indexes[0], indexes[1]);
+                    ApplyMove(move, false);
+                    mainWindow.UpdateUIAfterMove(move);
                 }));
             turnToMove = true;
         }
@@ -196,24 +160,27 @@ namespace G12_ChessApplication.Src.chess_game
             }
             if (IsPieceSelected)
             {
-                if (IsValidMove(SelectedPieceIndex, index))
+                if (prevLegalMoves.Any(item => item.toIndex == index))
                 {
                     try
                     {
-
-
                         // Switch to the next player
                         ChessColor opponent = (userPlayer.Color == ChessColor.WHITE) ? ChessColor.BLACK : ChessColor.WHITE;
                         Trace.WriteLine($"Changed player to {opponent}");
-                        string message = "";
-                        message += SelectedPieceIndex.ToString();
-                        message += " " + index.ToString();
-                        byte[] data = Encoding.ASCII.GetBytes(message);
+                        //string message = "";
+                        //message += SelectedPieceIndex.ToString();
+                        //message += " " + index.ToString();
+                        //byte[] data = Encoding.ASCII.GetBytes(message);
 
-                        _stream.Write(data, 0, data.Length);
+                        //_stream.Write(data, 0, data.Length);
 
-                        ApplyMove(SelectedPieceIndex, index);
-                        mainWindow.UpdateUIAfterMove(SelectedPieceIndex, index);
+
+                        Move currentMove = prevLegalMoves.Find(item => item.toIndex == index);
+                        SendObject(_stream, currentMove);
+
+
+                        ApplyMove(currentMove, true);
+                        mainWindow.UpdateUIAfterMove(currentMove);
                         turnToMove = false;
                     }
                     catch (Exception e)
@@ -236,11 +203,25 @@ namespace G12_ChessApplication.Src.chess_game
                     mainWindow.ResetSquareColor(SelectedPieceIndex);
                     selectedSquareIndex = null;
                 }
+
+                mainWindow.RemoveLegalMoves(prevLegalMoves);
             }
             else
             {
                 if (CanSelectPieceAt(index))
                 {
+                    List<Move> legalMoves;
+
+                    if (OpponentMoves.Count > 0)
+                    {
+                        legalMoves = gameState[index].FindLegalMoves(index, ref gameState, OpponentMoves.Last());
+                    }
+                    else
+                    {
+                        legalMoves = gameState[index].FindLegalMoves(index, ref gameState, null);
+                    }
+                    mainWindow.ShowLegalMoves(legalMoves);
+                    prevLegalMoves = legalMoves;
                     // Deselect the previous selection if any
                     if (selectedSquareIndex != null)
                     {
@@ -257,6 +238,43 @@ namespace G12_ChessApplication.Src.chess_game
                     selectedSquareIndex = index;
                 }
             }
+        }
+
+
+        public void SendObject(NetworkStream stream, Move obj)
+        {
+            // Serialize the object to JSON
+            string jsonString = JsonSerializer.Serialize(obj);
+
+            // Convert JSON string to byte array
+            byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonString);
+
+            // Send the length of the data first, so the receiver knows how much to read
+            byte[] lengthPrefix = BitConverter.GetBytes(jsonBytes.Length);
+            stream.Write(lengthPrefix, 0, lengthPrefix.Length);
+
+            // Send the serialized JSON object
+            stream.Write(jsonBytes, 0, jsonBytes.Length);
+        }
+        public Move ReceiveObject(NetworkStream stream)
+        {
+            // Read the length prefix to determine the size of the incoming data
+            byte[] lengthPrefix = new byte[4];
+            stream.Read(lengthPrefix, 0, lengthPrefix.Length);
+            int dataLength = BitConverter.ToInt32(lengthPrefix, 0);
+
+            // Read the actual data
+            byte[] jsonBytes = new byte[dataLength];
+            stream.Read(jsonBytes, 0, dataLength);
+
+            // Convert byte array to JSON string
+            string jsonString = Encoding.UTF8.GetString(jsonBytes);
+
+            // Deserialize JSON string to object
+            Move move = JsonSerializer.Deserialize<Move>(jsonString);
+            move.InvertMove();
+
+            return move;
         }
 
         public void CleanUpSockets()

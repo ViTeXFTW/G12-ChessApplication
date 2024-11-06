@@ -15,7 +15,7 @@ namespace G12_ChessApplication.Src.chess_game.util
         public Pawn(ChessColor color) : base(color)
         {
             string colorLetter = (ChessColor == ChessColor.WHITE) ? "w" : "b";
-
+            
             BitmapImage image = new BitmapImage();
             image.BeginInit();
 
@@ -23,58 +23,115 @@ namespace G12_ChessApplication.Src.chess_game.util
 
             image.EndInit();
             Source = image;
+
+            directions = new List<Tuple<int, int>> { Tuple.Create(-1, 0), Tuple.Create(-1, -1), Tuple.Create(-1, 1) };
+            distance = 2;
         }
 
-        public override bool MoveValid(int fromIndex, int toIndex, ref ChessPiece[] gameState)
+        public override List<Move> FindLegalMoves(int index, ref ChessPiece[] gameState, Move lastMove)
         {
-            ChessPiece fromPiece = gameState[fromIndex];
-            ChessPiece toPiece = gameState[toIndex];
+            List<Move> result = new List<Move>();
+            bool check = CheckForBinding(index, ref gameState, out result);
+
+            if (check)
+            {
+                foreach (var move in result)
+                {
+                    if (move.isACapture)
+                    {
+                        if (CanAttackPos(move.toIndex, move.fromIndex))
+                        {
+                            return new List<Move> { new Move(move) };
+                        }
+                    }
+                }
+
+            }
+
+            result.Clear();
+
+
+            int fromRow = index / 8;
+            int fromCol = index % 8;
+
+            foreach (var item in this.directions)
+            {
+                int row = fromRow + item.Item1;
+                int col = fromCol + item.Item2;
+                
+                int disCounter = (item.Item2 == 0) ? this.distance : 1;
+
+                while (row >= 0 && row <= 7 && col >= 0 && col <= 7 && disCounter > 0)
+                {
+                    int newIndex = row * 8 + col;
+                    if (gameState[newIndex] != null)
+                    {
+                        if (this.ChessColor != gameState[newIndex].ChessColor && item.Item2 != 0)
+                        {
+                            result.Add(new Move(index, newIndex, true));
+                        }
+                        break;
+                    }
+                    if (item.Item2 == 0)
+                    {
+                        result.Add(new Move(index, newIndex, false));
+                    }
+
+                    disCounter--;
+                    row += item.Item1;
+                    col += item.Item2;
+                }
+            }
+
+            if (fromRow == 3 && lastMove != null)
+            {
+                int newCol = fromCol - 1;
+                for (int i = 0; i < 2; i++)
+                {
+                    int newIndex = fromRow * 8 + newCol;
+                    if (gameState[newIndex] is Pawn && gameState[newIndex].ChessColor != ChessColor)
+                    {
+                        if (lastMove.toIndex == newIndex)
+                        {
+                            int newFromRow = lastMove.fromIndex / 8;
+                            int newToRow = lastMove.toIndex / 8;
+                            if (Math.Abs(newFromRow - newToRow) == 2)
+                            {
+                                int enPassentIndex = newIndex - 8;
+                                result.Add(new EnPassantMove(index, enPassentIndex, false, newIndex));
+                            }
+
+                        }
+                    }
+                    newCol = fromCol + 1;
+                }
+            }
+
+
+
+
+            return result;
+        }
+
+        public bool CanAttackPos(int toIndex, int fromIndex)
+        {
+
             int fromRow = fromIndex / 8;
             int fromCol = fromIndex % 8;
             int toRow = toIndex / 8;
             int toCol = toIndex % 8;
 
-            int rowDiff = toRow - fromRow;
-            int colDiff = toCol - fromCol;
-
-            int playerSign = -1;
-            int startRow = 6;
-
-            if (fromPiece.ChessColor != Game.userPlayer.Color)
+            if (fromRow - toRow == 1 && Math.Abs(fromCol - toCol) == 1)
             {
-                playerSign = 1;
-                startRow = 1;
-            }
-
-            // Forward movement
-            if (colDiff == 0)
-            {
-                Trace.WriteLine("Forward pawn movement");
-                // Move forward one square
-                if (rowDiff == (1 * playerSign) && toPiece == null)
-                {
-                    Trace.WriteLine("Forward 1 square");
-                    return true;
-                }
-                // Move forward two squares from starting position
-                if (rowDiff == (2 * playerSign) && fromRow == startRow && toPiece == null && gameState[(fromRow + (1 * playerSign)) * 8 + fromCol] == null)
-                {
-                    Trace.WriteLine("Forward 2 square");
-                    return true;
-                }
-            }
-            // Capture diagonally
-            else if (Math.Abs(colDiff) == 1 && rowDiff == (1 * playerSign) && toPiece != null)
-            {
-                Trace.WriteLine("Diagonal attack");
                 return true;
             }
-
             return false;
         }
+
     }
 
-    class Bishop : ChessPiece
+
+        class Bishop : ChessPiece
     {
         public Bishop(ChessColor color) : base(color)
         {
@@ -84,11 +141,8 @@ namespace G12_ChessApplication.Src.chess_game.util
             image.UriSource = new Uri("pack://application:,,,/Images/" + colorLetter + "_bishop_2x_ns.png");
             image.EndInit();
             Source = image;
-        }
 
-        public override bool MoveValid(int fromIndex, int toIndex, ref ChessPiece[] gameState)
-        {
-            return DiaganolValid(fromIndex, toIndex, ref gameState);
+            directions = new List<Tuple<int, int>> { Tuple.Create(-1, -1), Tuple.Create(-1, 1), Tuple.Create(1, 1), Tuple.Create(1, -1) };
         }
     }
 
@@ -102,25 +156,11 @@ namespace G12_ChessApplication.Src.chess_game.util
             image.UriSource = new Uri("pack://application:,,,/Images/" + colorLetter + "_knight_2x_ns.png");
             image.EndInit();
             Source = image;
-        }
 
-        public override bool MoveValid(int fromIndex, int toIndex, ref ChessPiece[] gameState)
-        {
-            int fromRow = fromIndex / 8;
-            int fromCol = fromIndex % 8;
-            int toRow = toIndex / 8;
-            int toCol = toIndex % 8;
-
-            int rowDiff = Math.Abs(toRow - fromRow);
-            int colDiff = Math.Abs(toCol - fromCol);
-
-            // Knight moves in L-shape: 2 by 1 or 1 by 2
-            if ((rowDiff == 2 && colDiff == 1) || (rowDiff == 1 && colDiff == 2))
-            {
-                return true;
-            }
-
-            return false;
+            directions = new List<Tuple<int, int>> { Tuple.Create(1, 2), Tuple.Create(1, -2), Tuple.Create(-1, 2), Tuple.Create(-1, -2),
+                                                     Tuple.Create(2, 1), Tuple.Create(2, -1), Tuple.Create(-2, 1), Tuple.Create(-2, -1)
+            };
+            distance = 1;
         }
     }
 
@@ -134,11 +174,8 @@ namespace G12_ChessApplication.Src.chess_game.util
             image.UriSource = new Uri("pack://application:,,,/Images/" + colorLetter + "_rook_2x_ns.png");
             image.EndInit();
             Source = image;
-        }
 
-        public override bool MoveValid(int fromIndex, int toIndex, ref ChessPiece[] gameState)
-        {
-            return HorizontalOrVerticalValid(fromIndex, toIndex, ref gameState);
+            directions = new List<Tuple<int, int>> { Tuple.Create(1, 0), Tuple.Create(-1, 0), Tuple.Create(0, 1), Tuple.Create(0, -1) };
         }
     }
 
@@ -152,17 +189,15 @@ namespace G12_ChessApplication.Src.chess_game.util
             image.UriSource = new Uri("pack://application:,,,/Images/" + colorLetter + "_queen_2x_ns.png");
             image.EndInit();
             Source = image;
-        }
-
-        public override bool MoveValid(int fromIndex, int toIndex, ref ChessPiece[] gameState)
-        {
-            // Queen can move like a rook or a bishop
-            return HorizontalOrVerticalValid(fromIndex, toIndex, ref gameState) || DiaganolValid(fromIndex, toIndex, ref gameState);
+            directions = new List<Tuple<int, int>> { Tuple.Create(1, 0), Tuple.Create(-1, 0), Tuple.Create(0, 1), Tuple.Create(0, -1),
+                                                    Tuple.Create(-1, -1), Tuple.Create(-1, 1), Tuple.Create(1, 1), Tuple.Create(1, -1) 
+            };
         }
     }
 
     class King : ChessPiece
     {
+        public bool hasCastled = false;
         public King(ChessColor color) : base(color)
         {
             string colorLetter = (ChessColor == ChessColor.WHITE) ? "w" : "b";
@@ -171,27 +206,19 @@ namespace G12_ChessApplication.Src.chess_game.util
             image.UriSource = new Uri("pack://application:,,,/Images/" + colorLetter + "_king_2x_ns.png");
             image.EndInit();
             Source = image;
+
+            directions = new List<Tuple<int, int>> { Tuple.Create(1, 0), Tuple.Create(-1, 0), Tuple.Create(0, 1), Tuple.Create(0, -1),
+                                                    Tuple.Create(-1, -1), Tuple.Create(-1, 1), Tuple.Create(1, 1), Tuple.Create(1, -1)
+            };
+            distance = 1;
         }
 
-        public override bool MoveValid(int fromIndex, int toIndex, ref ChessPiece[] gameState)
+        public override List<Move> FindLegalMoves(int index, ref ChessPiece[] gameState, Move lastMove)
         {
-            int fromRow = fromIndex / 8;
-            int fromCol = fromIndex % 8;
-            int toRow = toIndex / 8;
-            int toCol = toIndex % 8;
+            List<Move> result = new List<Move>();
 
-            int rowDiff = Math.Abs(toRow - fromRow);
-            int colDiff = Math.Abs(toCol - fromCol);
 
-            // King moves one square in any direction
-            if (rowDiff <= 1 && colDiff <= 1)
-            {
-                return true;
-            }
-
-            // TODO: Implement castling (not covered here)
-
-            return false;
+            return GenerelFindMoves(index, gameState, result);
         }
     }
 }

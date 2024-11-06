@@ -46,12 +46,12 @@ namespace G12_ChessApplication.Src.chess_game
 
             if (CurrentPuzzle.playerMoves.First().Item1 == FromSquareIndex && CurrentPuzzle.playerMoves.First().Item2 == index)
             {
-                mainWindow.UpdateUIAfterMove(FromSquareIndex, index);
+                mainWindow.UpdateUIAfterMove(new Move(FromSquareIndex, index, false));
                 CurrentPuzzle.playerMoves.RemoveAt(0);
 
                 if (CurrentPuzzle.enemyMoves.Count > 0)
                 {
-                    mainWindow.UpdateUIAfterMove(CurrentPuzzle.enemyMoves.First().Item1, CurrentPuzzle.enemyMoves.First().Item2);
+                    mainWindow.UpdateUIAfterMove(new Move(CurrentPuzzle.enemyMoves.First().Item1, CurrentPuzzle.enemyMoves.First().Item2, false));
                     CurrentPuzzle.enemyMoves.RemoveAt(0);
                 }
             }

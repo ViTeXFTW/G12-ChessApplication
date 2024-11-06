@@ -106,10 +106,10 @@ namespace G12_ChessApplication
             squareColor.Fill = isLightSquare ? Brushes.Beige : Brushes.DarkGreen;
         }
 
-        public void UpdateUIAfterMove(int fromIndex, int toIndex)
+        public void UpdateUIAfterMove(Move move)
         {
-            Grid squareFrom = (Grid)mainBoard.Children[fromIndex];
-            Grid squareTo = (Grid)mainBoard.Children[toIndex];
+            Grid squareFrom = (Grid)mainBoard.Children[move.fromIndex];
+            Grid squareTo = (Grid)mainBoard.Children[move.toIndex];
             ChessPiece pieceToMove = (ChessPiece)squareFrom.Children[1];
             squareFrom.Children.Remove(pieceToMove);
 
@@ -120,13 +120,62 @@ namespace G12_ChessApplication
                     squareTo.Children.RemoveAt(i);
                 }
             }
-            Rectangle squareColorFrom = (Rectangle)squareFrom.Children[0];
-            Rectangle squareColorTo = (Rectangle)squareTo.Children[0];
-
-            //squareColorFrom.StrokeThickness = (squareColorFrom.StrokeThickness == 0) ? 3 : 0;
-            //squareColorTo.StrokeThickness = (squareColorTo.StrokeThickness == 0) ? 3 : 0;
 
             squareTo.Children.Add(pieceToMove);
+
+
+            if (move is EnPassantMove enPassantMove)
+            {
+                Grid enPassantSquare = (Grid)mainBoard.Children[enPassantMove.capturedIndex];
+                ChessPiece enPassantPiece = (ChessPiece)enPassantSquare.Children[1];
+                enPassantSquare.Children.Remove(enPassantPiece);
+            }
+
+        }
+
+        public void ShowLegalMoves(List<Move> legalMoves)
+        {
+
+            foreach (var item in legalMoves)
+            {
+                if (item.isACapture)
+                {
+                    HighlightSquare(item.toIndex);
+                }
+                else if (mainBoard.Children[item.toIndex] is Grid square)
+                {
+                    Ellipse ellipse = new Ellipse();
+                    ellipse.Width = 20;
+                    ellipse.Height = 20;
+                    ellipse.Fill = new SolidColorBrush(Colors.Cyan);
+                    square.Children.Add(ellipse);
+                }
+            }
+
+
+        }
+        public void RemoveLegalMoves(List<Move> legalMoves)
+        {
+
+            foreach (var item in legalMoves)
+            {
+                if (item.isACapture)
+                {
+                    ResetSquareColor(item.toIndex);
+                }
+                else if (mainBoard.Children[item.toIndex] is Grid square)
+                {
+                    foreach (var child in square.Children)
+                    {
+                        if (child is Ellipse ellipse)
+                        {
+                            square.Children.Remove(ellipse);
+                            break;
+                        }
+                    }
+                }
+            }
+
 
         }
 

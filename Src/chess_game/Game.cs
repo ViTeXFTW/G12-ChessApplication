@@ -14,6 +14,9 @@ namespace G12_ChessApplication.Src.chess_game
 {
     public abstract class Game
     {
+        public List<Move> prevLegalMoves = new List<Move>();
+        public List<Move> OpponentMoves = new List<Move>();
+        public List<Move> PlayerMoves = new List<Move>();
         public static Player userPlayer { get; set; }
         public bool IsPieceSelected { get; set; }
         public int SelectedPieceIndex { get; set; }
@@ -71,33 +74,40 @@ namespace G12_ChessApplication.Src.chess_game
             IsPieceSelected = false;
         }
 
-
-        public bool IsValidMove(int fromIndex, int toIndex)
+        public void ApplyMove(Move move, bool player)
         {
-            ChessPiece fromPiece = gameState[fromIndex];
-            ChessPiece toPiece = gameState[toIndex];
-
-            if (fromPiece == null)
+            if (gameState[move.fromIndex] is Pawn p)
             {
-                return false;
+                if (p.distance == 2)
+                {
+                    p.distance = 1;
+                }
             }
-
-            if (toPiece != null && fromPiece.ChessColor == toPiece.ChessColor)
+            if (player)
             {
-                Trace.WriteLine($"Cannot capture own piece at {toIndex}");
-                return false;
+                AddPlayerMove(move);
             }
-
-            return fromPiece.MoveValid(fromIndex, toIndex, ref gameState);
-
-        }
-
-        public void ApplyMove(int fromIndex, int toIndex)
-        {
-            gameState[toIndex] = gameState[fromIndex];
-            gameState[fromIndex] = null;
+            else
+            {
+                AddOpponentMove(move);
+            }
+            if (move is EnPassantMove enPassantMove)
+            {
+                gameState[enPassantMove.capturedIndex] = null;
+            }
+            gameState[move.toIndex] = gameState[move.fromIndex];
+            gameState[move.fromIndex] = null;
             DeselectPiece();
         }
+        
+        public void AddOpponentMove(Move move)
+        {
+            OpponentMoves.Add(move);
+        }
 
+        public void AddPlayerMove(Move move)
+        {
+            PlayerMoves.Add(move);
+        }
     }
 }
