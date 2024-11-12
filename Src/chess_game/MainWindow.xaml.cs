@@ -26,9 +26,10 @@ namespace G12_ChessApplication
         public static ChessBoard mainBoard;
         private Game game;
         private string GameCode = string.Empty;
-        private ChessColor color = ChessColor.WHITE;
-        private int colorFacing = 1;
+        public static ChessColor PlayerColor = ChessColor.WHITE;
         public string GameType { get; }
+        public static int boardHeight { get; set; } = 500;
+        public static int boardWidth { get; set; } = 500;
 
 
         public MainWindow(string gameType, string code = "")
@@ -40,15 +41,13 @@ namespace G12_ChessApplication
                 GameCode = code;
                 if (code != "Host")
                 {
-                    color = ChessColor.BLACK;
-                    colorFacing = -1;
+                    PlayerColor = ChessColor.BLACK;
                 }
             }
             GameType = gameType;
 
             InitializeBoard();
             SetupGameType();
-
         }
 
         private void SetupGameType()
@@ -56,10 +55,13 @@ namespace G12_ChessApplication
             switch(GameType)
             {
                 case "play":
-                    game = new PlayerGame(this, GameCode, color);
+                    game = new PlayerGame(this, GameCode, PlayerColor);
                     break;
                 case "puzzles":
-                    game = new PuzzleGame(this, color);
+                    game = new PuzzleGame(this, PlayerColor);
+                    break;
+                case "Analysis":
+                    game = new AnalysisGame(this);
                     break;
                 default:
                     break;
@@ -68,7 +70,8 @@ namespace G12_ChessApplication
 
         private void InitializeBoard(string board = "")
         {
-            mainBoard = new ChessBoard(colorFacing, 500, 500);
+            
+            mainBoard = new ChessBoard(boardHeight, boardWidth);
             //mainBoard.VerticalAlignment = VerticalAlignment.Top;
             //mainBoard.HorizontalAlignment = HorizontalAlignment.Left;
             foreach (Grid square in mainBoard.Children)
@@ -106,36 +109,49 @@ namespace G12_ChessApplication
             squareColor.Fill = isLightSquare ? Brushes.Beige : Brushes.DarkGreen;
         }
 
-        public void UpdateUIAfterMove(Move move)
+        public void UpdateUIAfterMove(Move move, bool isReverse)
         {
             Grid squareFrom = (Grid)mainBoard.Children[move.fromIndex];
             Grid squareTo = (Grid)mainBoard.Children[move.toIndex];
             ChessPiece pieceToMove = (ChessPiece)squareFrom.Children[1];
             squareFrom.Children.Remove(pieceToMove);
-
-            for (int i = 0; i < squareTo.Children.Count; i++)
+            if (isReverse && move.capturedPiece != null)
             {
-                if (squareTo.Children[i] is ChessPiece)
+                squareFrom.Children.Add(move.capturedPiece);
+            }
+            else
+            {
+                for (int i = 0; i < squareTo.Children.Count; i++)
                 {
-                    squareTo.Children.RemoveAt(i);
+                    if (squareTo.Children[i] is ChessPiece)
+                    {
+                        squareTo.Children.RemoveAt(i);
+                    }
                 }
             }
 
-            squareTo.Children.Add(pieceToMove);
-
+            squareTo.Children.Add(move.movingPiece);
 
             if (move is EnPassantMove enPassantMove)
             {
-                Grid enPassantSquare = (Grid)mainBoard.Children[enPassantMove.capturedIndex];
-                ChessPiece enPassantPiece = (ChessPiece)enPassantSquare.Children[1];
-                enPassantSquare.Children.Remove(enPassantPiece);
+                Grid enPassantSquare;
+                if (isReverse)
+                {
+                    enPassantSquare = (Grid)mainBoard.Children[enPassantMove.capturedIndex];
+                    enPassantSquare.Children.Add(enPassantMove.enPassantPiece);
+                }
+                else
+                {
+                    enPassantSquare = (Grid)mainBoard.Children[enPassantMove.capturedIndex];
+                    ChessPiece enPassantPiece = (ChessPiece)enPassantSquare.Children[1];
+                    enPassantSquare.Children.Remove(enPassantPiece);
+                }
+                
             }
-
         }
 
         public void ShowLegalMoves(List<Move> legalMoves)
         {
-
             foreach (var item in legalMoves)
             {
                 if (item.isACapture)
@@ -151,12 +167,10 @@ namespace G12_ChessApplication
                     square.Children.Add(ellipse);
                 }
             }
-
-
         }
+
         public void RemoveLegalMoves(List<Move> legalMoves)
         {
-
             foreach (var item in legalMoves)
             {
                 if (item.isACapture)
@@ -175,8 +189,6 @@ namespace G12_ChessApplication
                     }
                 }
             }
-
-
         }
 
         private void RepeatPuzzle_Click(object sender, RoutedEventArgs e)
@@ -188,7 +200,8 @@ namespace G12_ChessApplication
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            Trace.WriteLine(FenParser.GetFenStringFromArray(game.gameState, game.colorFacing));
+            Trace.WriteLine(FenParser.GetFenStringFromArray(game.gameState));
+            game.UndoMove();
         }
 
         private void Button_Click_1(object sender, RoutedEventArgs e)

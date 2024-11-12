@@ -19,15 +19,15 @@ namespace G12_ChessApplication.Src.chess_game
         {
             ChessPuzzle chessPuzzle = new ChessPuzzle();
             chessPuzzle.board = "4r1rk/5K1b/7R/R7/8/8/8/8";
-            chessPuzzle.enemyMoves.Add(Tuple.Create(7, 15));
-            chessPuzzle.playerMoves.Add(Tuple.Create(23, 15));
-            chessPuzzle.playerMoves.Add(Tuple.Create(24, 31));
+            chessPuzzle.enemyMoves.Add(new Move(7, 15));
+            chessPuzzle.playerMoves.Add(new Move(23, 15));
+            chessPuzzle.playerMoves.Add(new Move(24, 31));
 
             Puzzles.Add(chessPuzzle);
 
             CurrentPuzzle = new ChessPuzzle(chessPuzzle);
 
-            gameState = FenParser.CreatePieceArray(colorFacing,CurrentPuzzle.board);
+            gameState = FenParser.CreatePieceArray(CurrentPuzzle.board);
 
             MainWindow.mainBoard.SetBoardSetup(CurrentPuzzle.board);
         }
@@ -44,14 +44,14 @@ namespace G12_ChessApplication.Src.chess_game
                 return;
             }
 
-            if (CurrentPuzzle.playerMoves.First().Item1 == FromSquareIndex && CurrentPuzzle.playerMoves.First().Item2 == index)
+            if (CurrentPuzzle.playerMoves.First().fromIndex == FromSquareIndex && CurrentPuzzle.playerMoves.First().toIndex == index)
             {
-                mainWindow.UpdateUIAfterMove(new Move(FromSquareIndex, index, false));
+                mainWindow.UpdateUIAfterMove(new Move(FromSquareIndex, index, false), false);
                 CurrentPuzzle.playerMoves.RemoveAt(0);
 
                 if (CurrentPuzzle.enemyMoves.Count > 0)
                 {
-                    mainWindow.UpdateUIAfterMove(new Move(CurrentPuzzle.enemyMoves.First().Item1, CurrentPuzzle.enemyMoves.First().Item2, false));
+                    mainWindow.UpdateUIAfterMove(new Move(CurrentPuzzle.enemyMoves.First().fromIndex, CurrentPuzzle.enemyMoves.First().toIndex, false), false);
                     CurrentPuzzle.enemyMoves.RemoveAt(0);
                 }
             }

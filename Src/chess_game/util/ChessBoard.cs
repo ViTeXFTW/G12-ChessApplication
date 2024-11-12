@@ -29,17 +29,14 @@ namespace G12_ChessApplication.Src.chess_game.util
         };
 
         string BoardSetup = "r1bk3r/p2pBpNp/n4n2/1p1NP2P/6P1/3P4/P1P1K3/q5b1";
-        public int color = 1; // White is 1, black is -1, decides which way the board is facing
 
-        public ChessBoard(int color, double height = 640, double width = 640, string pieceLayout = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR")
+        public ChessBoard(double height = 640, double width = 640, string pieceLayout = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR")
         {
             Height = height;
             Width = width;
-            this.color = color;
             DefualtBoard();
             SetBoardSetup(pieceLayout);
         }
-
 
         private void DefualtBoard()
         {
@@ -84,8 +81,7 @@ namespace G12_ChessApplication.Src.chess_game.util
         {
             RemovePieces();
             BoardSetup = layout;
-            double chessPieceHeight = Height / 8 * 0.9;
-            double chessPieceWidth = Width / 8 * 0.9;
+            int color = MainWindow.PlayerColor == ChessColor.WHITE ? 1 : -1;
 
             int squareIndex = (color == 1) ? 0 : 63;
             foreach (char item in layout)
@@ -98,8 +94,6 @@ namespace G12_ChessApplication.Src.chess_game.util
                 else if (charToPieceConverter.TryGetValue(item, out Func<ChessPiece> createPiece))
                 {
                     ChessPiece newPiece = createPiece();
-                    newPiece.Height = chessPieceHeight;
-                    newPiece.Width = chessPieceWidth;
                     Grid square = Children[squareIndex] as Grid;
                     square.Children.Add(newPiece);
 

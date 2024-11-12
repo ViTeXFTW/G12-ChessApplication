@@ -14,7 +14,7 @@
         <StackPanel VerticalAlignment="Top">
             <Button x:Name="NextPuzzle" Content="Next Puzzle"/>
             <Button x:Name="RepeatPuzzle" Content="Repeat Puzzle" Click="RepeatPuzzle_Click"/>
-            <Button Content="Button" Click="Button_Click"/>
+            <Button Content="Undo" Click="Button_Click"/>
             <Button Content="Go back" Click="Button_Click_1" />
         </StackPanel>
         <Grid x:Name="GameGrid" Grid.Column="1">

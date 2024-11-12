@@ -27,8 +27,6 @@ namespace G12_ChessApplication.Src.chess_game
 
         private bool host { get; set; } = true;
 
-        public ChessColor color {  get; set; }
-
         private int? selectedSquareIndex = null;
         public PlayerGame(MainWindow main, string code, ChessColor chessColor) : base(main, chessColor)
         {
@@ -126,22 +124,14 @@ namespace G12_ChessApplication.Src.chess_game
 
         private void HandleMessage(Move move)
         {
-
             Trace.WriteLine($"Client: {move}\n");
             Application.Current.Dispatcher.BeginInvoke(
               DispatcherPriority.Background,
                 new Action(() => {
-                    ApplyMove(move, false);
-                    mainWindow.UpdateUIAfterMove(move);
+                    ApplyMove(move);
+                    mainWindow.UpdateUIAfterMove(move, false);
                 }));
             turnToMove = true;
-        }
-
-        private int GetDigit(string v)
-        {
-            int digit = Int32.Parse(v);
-            int index = Math.Abs(digit - 63);
-            return index;
         }
 
         public void SendButton_Click(object sender, RoutedEventArgs e)
@@ -165,7 +155,7 @@ namespace G12_ChessApplication.Src.chess_game
                     try
                     {
                         // Switch to the next player
-                        ChessColor opponent = (userPlayer.Color == ChessColor.WHITE) ? ChessColor.BLACK : ChessColor.WHITE;
+                        ChessColor opponent = (UserPlayer.Color == ChessColor.WHITE) ? ChessColor.BLACK : ChessColor.WHITE;
                         Trace.WriteLine($"Changed player to {opponent}");
                         //string message = "";
                         //message += SelectedPieceIndex.ToString();
@@ -179,8 +169,8 @@ namespace G12_ChessApplication.Src.chess_game
                         SendObject(_stream, currentMove);
 
 
-                        ApplyMove(currentMove, true);
-                        mainWindow.UpdateUIAfterMove(currentMove);
+                        ApplyMove(currentMove);
+                        mainWindow.UpdateUIAfterMove(currentMove, false);
                         turnToMove = false;
                     }
                     catch (Exception e)

@@ -5,12 +5,14 @@ using System.Text;
 using System.Threading.Tasks;
 using G12_ChessApplication.Src.chess_game.util;
 
+
 namespace G12_ChessApplication.Src.chess_game.util
 {
     public static class FenParser
     {
-        public static ChessPiece[] CreatePieceArray(int colorFacing = 1, string fenString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR")
+        public static ChessPiece[] CreatePieceArray(string fenString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR")
         {
+            int colorFacing = Game.PlayerColor == ChessColor.WHITE ? 1 : -1;
             ChessPiece[] board = new ChessPiece[64];
 
             // Extract the piece placement field from the FEN string
@@ -87,7 +89,7 @@ namespace G12_ChessApplication.Src.chess_game.util
             }
         }
 
-        public static string GetFenStringFromArray(ChessPiece[] gameState, int colorfacing)
+        public static string GetFenStringFromArray(ChessPiece[] gameState)
         {
             string fenString = "";
             int emptySpaces = 0;

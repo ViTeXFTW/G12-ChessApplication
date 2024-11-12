@@ -48,6 +48,11 @@ namespace G12_ChessApplication
         {
             OptionSelected?.Invoke(this, new OptionSelectedEventArgs { SelectedOption = "Puzzles" });
         }
+
+        private void AnalysisBtn_Click(object sender, RoutedEventArgs e)
+        {
+            OptionSelected?.Invoke(this, new OptionSelectedEventArgs { SelectedOption = "Analysis" });
+        }
     }
 
     public class OptionSelectedEventArgs : EventArgs

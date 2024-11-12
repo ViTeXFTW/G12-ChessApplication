@@ -61,7 +61,6 @@ namespace G12_ChessApplication
 
         private void OnOptionSelected(object sender, OptionSelectedEventArgs e)
         {
-
             // Close the login window
             if (sender is Window mainMenuWindow)
             {
@@ -78,6 +77,9 @@ namespace G12_ChessApplication
                     break;
                 case "Puzzles":
                     init_game("Host", "puzzles");
+                    break;
+                case "Analysis":
+                    init_game("Host", "Analysis");
                     break;
                 case "Settings":
                     break;
