@@ -26,9 +26,12 @@ namespace G12_ChessApplication.Src.chess_game
                 Move currentMove = prevLegalMoves.Find(item => item.toIndex == index);
 
                 ApplyMove(currentMove);
-                mainWindow.UpdateUIAfterMove();
                 // Switch to the next player
                 UserPlayer.ChangePlayer();
+            }
+            else
+            {
+                mainWindow.ResetSquareColor(SelectedPieceIndex);
             }
         }
     }

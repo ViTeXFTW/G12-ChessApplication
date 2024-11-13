@@ -92,12 +92,16 @@ namespace G12_ChessApplication
             game.SquareClicked(index);
         }
 
-        public void HighlightSquare(int index)
+        public void HighlightSquare(int index, SolidColorBrush color = null)
         {
+            if (color == null)
+            {
+                color = Brushes.IndianRed;
+            }
             Grid square = (Grid)mainBoard.Children[index];
             Rectangle squareColor = (Rectangle)square.Children[0];
 
-            squareColor.Fill = Brushes.IndianRed;
+            squareColor.Fill = color;
         }
 
         public void ResetSquareColor(int index)
@@ -145,14 +149,14 @@ namespace G12_ChessApplication
             {
                 if (item.isACapture)
                 {
-                    HighlightSquare(item.toIndex);
+                    HighlightSquare(item.toIndex, Brushes.Gray);
                 }
                 else if (mainBoard.Children[item.toIndex] is Grid square)
                 {
                     Ellipse ellipse = new Ellipse();
                     ellipse.Width = 20;
                     ellipse.Height = 20;
-                    ellipse.Fill = new SolidColorBrush(Colors.Cyan);
+                    ellipse.Fill = Brushes.Gray;
                     square.Children.Add(ellipse);
                 }
             }
@@ -162,11 +166,7 @@ namespace G12_ChessApplication
         {
             foreach (var item in legalMoves)
             {
-                if (item.isACapture)
-                {
-                    ResetSquareColor(item.toIndex);
-                }
-                else if (mainBoard.Children[item.toIndex] is Grid square)
+                if (mainBoard.Children[item.toIndex] is Grid square)
                 {
                     foreach (var child in square.Children)
                     {
@@ -200,6 +200,18 @@ namespace G12_ChessApplication
                 playerGame.CleanUpSockets();
             }
             goBack?.Invoke(this, EventArgs.Empty);
+        }
+
+        public void HighLightMove(Move move)
+        {
+            HighlightSquare(move.fromIndex);
+            HighlightSquare(move.toIndex);
+        }
+
+        public void UnHighLightMove(Move move)
+        {
+            ResetSquareColor(move.fromIndex);
+            ResetSquareColor(move.toIndex);
         }
     }
 }

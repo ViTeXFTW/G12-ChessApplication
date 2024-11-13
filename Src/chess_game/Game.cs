@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 
 
 namespace G12_ChessApplication.Src.chess_game
@@ -51,7 +52,6 @@ namespace G12_ChessApplication.Src.chess_game
                 HandleClick(index);
 
                 DeselectPiece();
-                mainWindow.ResetSquareColor(SelectedPieceIndex);
                 selectedSquareIndex = null;
                 mainWindow.RemoveLegalMoves(prevLegalMoves);
             }
@@ -76,7 +76,7 @@ namespace G12_ChessApplication.Src.chess_game
                     SelectPieceAt(index);
 
                     // Highlight the selected square
-                    mainWindow.HighlightSquare(index);
+                    mainWindow.HighlightSquare(index, Brushes.Gray);
 
                     // Keep track of the selected square index
                     selectedSquareIndex = index;
@@ -162,26 +162,45 @@ namespace G12_ChessApplication.Src.chess_game
 
             if (PlayerColor == gameState[move.fromIndex].ChessColor)
             {
+                if (OpponentMoves.Count > 0)
+                {
+                    mainWindow.UnHighLightMove(OpponentMoves.Last());
+                }
                 AddPlayerMove(move);
             }
             else
             {
+                if (PlayerMoves.Count > 0)
+                {
+                    mainWindow.UnHighLightMove(PlayerMoves.Last());
+                }
                 AddOpponentMove(move);
             }
             gameState[move.toIndex] = gameState[move.fromIndex];
             gameState[move.fromIndex] = null;
             HandleChecks();
+            mainWindow.UpdateUIAfterMove();
+            mainWindow.HighLightMove(move);
 
         }
         public void ApplyReverseMove(Move move)
         {
+            mainWindow.UnHighLightMove(move);
             if (PlayerColor == move.movingPiece.ChessColor)
             {
                 PlayerMoves.Remove(move);
+                if (OpponentMoves.Count > 0)
+                {
+                    mainWindow.HighLightMove(OpponentMoves.Last());
+                }
             }
             else
             {
                 OpponentMoves.Remove(move);
+                if (PlayerMoves.Count > 0)
+                {
+                    mainWindow.HighLightMove(PlayerMoves.Last());
+                }
             }
 
             if (move is CastlingMove castlingMove)
@@ -197,6 +216,7 @@ namespace G12_ChessApplication.Src.chess_game
             gameState[move.fromIndex] = move.capturedPiece;
             gameState[move.toIndex] = move.movingPiece;
             HandleChecks();
+            mainWindow.UpdateUIAfterMove();
         }
 
         public void AddOpponentMove(Move move)

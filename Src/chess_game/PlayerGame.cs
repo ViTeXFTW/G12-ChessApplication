@@ -132,7 +132,6 @@ namespace G12_ChessApplication.Src.chess_game
               DispatcherPriority.Background,
                 new Action(() => {
                     ApplyMove(move);
-                    mainWindow.UpdateUIAfterMove();
                 }));
             turnToMove = true;
         }
@@ -243,16 +242,17 @@ namespace G12_ChessApplication.Src.chess_game
                     SendObject(_stream, currentMove);
                     //SendMove(_stream, currentMove);
 
-                    mainWindow.UpdateUIAfterMove();
                     turnToMove = false;
                 }
                 catch (Exception e)
                 {
                     _stream = null;
                 }
-                // Reset the color of the previously selected square
-                mainWindow.ResetSquareColor(SelectedPieceIndex);
                 selectedSquareIndex = null;
+            }
+            else
+            {
+                mainWindow.ResetSquareColor(SelectedPieceIndex);
             }
         }
     }
