@@ -12,6 +12,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
+using System.Xml.Serialization;
 
 namespace G12_ChessApplication.Src.chess_game
 {
@@ -56,6 +57,7 @@ namespace G12_ChessApplication.Src.chess_game
             {
                 _client = new TcpClient("127.0.0.1", 12345);
                 _stream = _client.GetStream();
+                Trace.WriteLine("Connected to server");
 
                 _clientThread = new Thread(ReceiveMessages);
                 _clientThread.IsBackground = true;
@@ -75,6 +77,7 @@ namespace G12_ChessApplication.Src.chess_game
                 try
                 {
                     Move oppMove = ReceiveObject(_stream);
+                    //Move oppMove = ReceiveMove(_stream);
                     HandleMessage(oppMove);
                 }
                 catch
@@ -129,7 +132,7 @@ namespace G12_ChessApplication.Src.chess_game
               DispatcherPriority.Background,
                 new Action(() => {
                     ApplyMove(move);
-                    mainWindow.UpdateUIAfterMove(move, false);
+                    mainWindow.UpdateUIAfterMove();
                 }));
             turnToMove = true;
         }
@@ -137,97 +140,6 @@ namespace G12_ChessApplication.Src.chess_game
         public void SendButton_Click(object sender, RoutedEventArgs e)
         {
 
-        }
-        public override void SquareClicked(int index)
-        {
-            if (_stream == null)
-            {
-                if (!host)
-                {
-                    ConnectToServer();
-                }
-                return;
-            }
-            if (IsPieceSelected)
-            {
-                if (prevLegalMoves.Any(item => item.toIndex == index))
-                {
-                    try
-                    {
-                        // Switch to the next player
-                        ChessColor opponent = (UserPlayer.Color == ChessColor.WHITE) ? ChessColor.BLACK : ChessColor.WHITE;
-                        Trace.WriteLine($"Changed player to {opponent}");
-                        //string message = "";
-                        //message += SelectedPieceIndex.ToString();
-                        //message += " " + index.ToString();
-                        //byte[] data = Encoding.ASCII.GetBytes(message);
-
-                        //_stream.Write(data, 0, data.Length);
-
-
-                        Move currentMove = prevLegalMoves.Find(item => item.toIndex == index);
-                        SendObject(_stream, currentMove);
-
-
-                        ApplyMove(currentMove);
-                        mainWindow.UpdateUIAfterMove(currentMove, false);
-                        turnToMove = false;
-                    }
-                    catch (Exception e)
-                    {
-                        _stream = null; 
-                    }
-                    // Reset the color of the previously selected square
-                    mainWindow.ResetSquareColor(SelectedPieceIndex);
-                    selectedSquareIndex = null;
-
-                }
-                else
-                {
-
-                    // Invalid move, deselect the piece
-                    DeselectPiece();
-
-                    // Optionally update UI to reflect deselection
-
-                    mainWindow.ResetSquareColor(SelectedPieceIndex);
-                    selectedSquareIndex = null;
-                }
-
-                mainWindow.RemoveLegalMoves(prevLegalMoves);
-            }
-            else
-            {
-                if (CanSelectPieceAt(index))
-                {
-                    List<Move> legalMoves;
-
-                    if (OpponentMoves.Count > 0)
-                    {
-                        legalMoves = gameState[index].FindLegalMoves(index, ref gameState, OpponentMoves.Last());
-                    }
-                    else
-                    {
-                        legalMoves = gameState[index].FindLegalMoves(index, ref gameState, null);
-                    }
-                    mainWindow.ShowLegalMoves(legalMoves);
-                    prevLegalMoves = legalMoves;
-                    // Deselect the previous selection if any
-                    if (selectedSquareIndex != null)
-                    {
-                        mainWindow.ResetSquareColor(selectedSquareIndex.Value);
-                    }
-
-                    // Select the piece
-                    SelectPieceAt(index);
-
-                    // Highlight the selected square
-                    mainWindow.HighlightSquare(index);
-
-                    // Keep track of the selected square index
-                    selectedSquareIndex = index;
-                }
-            }
         }
 
 
@@ -267,6 +179,22 @@ namespace G12_ChessApplication.Src.chess_game
             return move;
         }
 
+        // Method to send the Move object
+        void SendMove(NetworkStream networkStream, Move move)
+        {
+            var serializer = new XmlSerializer(typeof(Move));
+            serializer.Serialize(networkStream, move);
+        }
+
+        // Method to receive the Move object
+        Move ReceiveMove(NetworkStream networkStream)
+        {
+            var serializer = new XmlSerializer(typeof(Move));
+            Move move = (Move)serializer.Deserialize(networkStream);
+            move.InvertMove();
+            return move;
+        }
+
         public void CleanUpSockets()
         {
             if (_server != null)
@@ -282,6 +210,50 @@ namespace G12_ChessApplication.Src.chess_game
                 _stream.Close();
             }
 
+        }
+
+        public override void HandleClick(int index)
+        {
+            if (_stream == null)
+            {
+                if (!host)
+                {
+                    ConnectToServer();
+                }
+                return;
+            }
+            else if (prevLegalMoves.Any(item => item.toIndex == index))
+            {
+                try
+                {
+                    // Switch to the next player
+                    ChessColor opponent = (UserPlayer.Color == ChessColor.WHITE) ? ChessColor.BLACK : ChessColor.WHITE;
+                    Trace.WriteLine($"Changed player to {opponent}");
+                    //string message = "";
+                    //message += SelectedPieceIndex.ToString();
+                    //message += " " + index.ToString();
+                    //byte[] data = Encoding.ASCII.GetBytes(message);
+
+                    //_stream.Write(data, 0, data.Length);
+
+
+                    Move currentMove = prevLegalMoves.Find(item => item.toIndex == index);
+                    ApplyMove(currentMove);
+                    currentMove = PlayerMoves.Last();
+                    SendObject(_stream, currentMove);
+                    //SendMove(_stream, currentMove);
+
+                    mainWindow.UpdateUIAfterMove();
+                    turnToMove = false;
+                }
+                catch (Exception e)
+                {
+                    _stream = null;
+                }
+                // Reset the color of the previously selected square
+                mainWindow.ResetSquareColor(SelectedPieceIndex);
+                selectedSquareIndex = null;
+            }
         }
     }
 }

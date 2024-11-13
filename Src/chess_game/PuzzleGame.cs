@@ -46,14 +46,18 @@ namespace G12_ChessApplication.Src.chess_game
 
             if (CurrentPuzzle.playerMoves.First().fromIndex == FromSquareIndex && CurrentPuzzle.playerMoves.First().toIndex == index)
             {
-                mainWindow.UpdateUIAfterMove(new Move(FromSquareIndex, index, false), false);
+                ApplyMove(CurrentPuzzle.playerMoves.First());
+                mainWindow.UpdateUIAfterMove();
                 CurrentPuzzle.playerMoves.RemoveAt(0);
 
                 if (CurrentPuzzle.enemyMoves.Count > 0)
                 {
-                    mainWindow.UpdateUIAfterMove(new Move(CurrentPuzzle.enemyMoves.First().fromIndex, CurrentPuzzle.enemyMoves.First().toIndex, false), false);
+                    UserPlayer.ChangePlayer();
+                    ApplyMove(CurrentPuzzle.enemyMoves.First());
+                    mainWindow.UpdateUIAfterMove();
                     CurrentPuzzle.enemyMoves.RemoveAt(0);
                 }
+                UserPlayer.ChangePlayer();
             }
 
             mainWindow.ResetSquareColor(FromSquareIndex);
@@ -80,6 +84,11 @@ namespace G12_ChessApplication.Src.chess_game
             CurrentPuzzle = new ChessPuzzle(Puzzles.First());
             puzzleIsActive = true;
 
+        }
+
+        public override void HandleClick(int index)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -4,73 +4,196 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Windows.Controls;
+using System.Windows.Input;
+using System.Xml.Serialization;
 
 namespace G12_ChessApplication.Src.chess_game.util
 {
-    public abstract class ChessPiece : Image, ICloneable
+    [JsonDerivedType(typeof(ChessPiece), "ChessPiece")]
+    [JsonDerivedType(typeof(Pawn), "Pawn")]
+    [JsonDerivedType(typeof(Bishop), "Bishop")]
+    [JsonDerivedType(typeof(Knight), "Knight")]
+    [JsonDerivedType(typeof(Rook), "Rook")]
+    [JsonDerivedType(typeof(Queen), "Queen")]
+    [JsonDerivedType(typeof(King), "King")]
+    [XmlInclude(typeof(Pawn))]
+    [XmlInclude(typeof(Knight))]
+    [XmlInclude(typeof(Pawn))]
+    [XmlInclude(typeof(Bishop))]
+    [XmlInclude(typeof(Knight))]
+    [XmlInclude(typeof(Rook))]
+    [XmlInclude(typeof(Queen))]
+    [XmlInclude(typeof(King))]
+    public class ChessPiece : ICloneable
     {
-        public readonly ChessColor ChessColor;
-        public bool hasMoved = false;
-        public List<Tuple<int, int>> directions;
-        public int distance = 100;
+        public ChessColor ChessColor { get; set; }
+        public bool hasMoved { get; set; } = false;
+        public List<Direction> directions { get; set; }
+        public int distance { get; set; } = 100;
+        public string uri { get; set; } = string.Empty;
 
+        [JsonConstructor]
         public ChessPiece(ChessColor color)
         {
             ChessColor = color;
-            Height = MainWindow.boardHeight / 8 * 0.9;
-            Width = MainWindow.boardWidth / 8 * 0.9;
         }
+
+        public ChessPiece() { }
 
         public ChessPiece(ChessPiece chessPiece)
         {
             this.ChessColor = chessPiece.ChessColor;
-            this.Height = chessPiece.Height;
-            this.Width = chessPiece.Width;
             this.directions = chessPiece.directions;
             this.distance = chessPiece.distance;
             this.hasMoved = chessPiece.hasMoved;
-            this.Source = chessPiece.Source;
+            this.uri = chessPiece.uri;
+        }
+
+        public virtual bool CanTakePieceAt(int ownIndex, int attackIndex, ref ChessPiece[] gameState, out List<Move> moves)
+        {
+            moves = new List<Move>();
+            return false;
+        }
+        public virtual object Clone()
+        {
+            return new ChessPiece(this);
         }
 
 
-        public abstract object Clone();
-
-        public List<Tuple<int, int>> InvertDirections()
+        public bool CanTakeHorizontalOrVertical(int ownIndex, int attackIndex, ref ChessPiece[] gameState, out List<Move> moves)
         {
-            List<Tuple<int, int>> newDirections = new List<Tuple<int, int>>();
-            this.directions.ForEach(x => newDirections.Add(Tuple.Create(x.Item1 * -1, x.Item2 * -1)));
+            moves = new List<Move>();
+            int ownRow = ownIndex / 8;
+            int ownCol = ownIndex % 8;
+
+            int attackRow = attackIndex / 8;
+            int attackCol = attackIndex % 8;
+
+            int rowDiff = Math.Abs(ownRow - attackRow);
+            int colDiff = Math.Abs(ownCol - attackCol);
+
+            int colStep = 0;
+            int rowStep = 0;
+            int steps = 0;
+
+            if (ownRow == attackRow)
+            {
+                colStep = attackCol > ownCol ? 1 : -1;
+                steps = colDiff;
+            }
+            else if (ownCol == attackCol)
+            {
+                rowStep = attackRow > ownRow ? 1 : -1;
+                steps = rowDiff;
+            }
+            else
+            {
+                return false;
+            }
+            bool check = IsPathToKingBlocked(ownIndex, gameState, ownRow, ownCol, rowStep, colStep, steps, ref moves);
+
+            if (check || steps == 0)
+            {
+                return false;
+            }
+
+            return true;
+            
+        }
+
+        public bool CanTakeDiagonal(int ownIndex, int attackIndex, ref ChessPiece[] gameState, out List<Move> moves)
+        {
+            moves = new List<Move>();
+            int ownRow = ownIndex / 8;
+            int ownCol = ownIndex % 8;
+
+            int attackRow = attackIndex / 8;
+            int attackCol = attackIndex % 8;
+
+            int rowDiff = attackRow - ownRow;
+            int colDiff = attackCol - ownCol;
+
+            if (Math.Abs(rowDiff) == Math.Abs(colDiff))
+            {
+                int rowStep = rowDiff > 0 ? 1 : -1;
+                int colStep = colDiff > 0 ? 1 : -1;
+                int steps = Math.Abs(rowDiff);
+
+                bool check = IsPathToKingBlocked(ownIndex, gameState, ownRow, ownCol, rowStep, colStep, steps, ref moves);
+
+                if (check || steps == 0)
+                {
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
+
+            }
+
+            return false;
+        }
+
+        public List<Direction> InvertDirections()
+        {
+            List<Direction> newDirections = new List<Direction>();
+            this.directions.ForEach(x => newDirections.Add(new Direction(x.row * -1, x.col * -1)));
             return newDirections;
         }
 
         public virtual List<Move> FindLegalMoves(int index, ref ChessPiece[] gameState, Move lastMove)
         {
             List<Move> result = new List<Move>();
+            List<Move> tempResult = new List<Move>();
+            if (Game.twoCheck)
+            {
+                return tempResult;
+            }
 
-            bool binding = CheckForBinding(index, ref gameState, out result);
+            bool binding = CheckForBinding(index, ref gameState, out tempResult);
             if (binding && this is Knight)
             {
-                result.Clear();
+                tempResult.Clear();
             }
             else
             {
-                result.Clear();
-                result = GenerelFindMoves(index, gameState, result);
+                tempResult.Clear();
+                tempResult = GenerelFindMoves(index, gameState);
+            }
+
+            if (Game.oneCheck)
+            {
+                foreach (Move move in tempResult)
+                {
+                    if (Game.checkIndexes.Any(m => m.toIndex == move.toIndex))
+                    {
+                        result.Add(move);
+                    }
+                }
+            }
+            else
+            {
+                result = tempResult;
             }
 
             return result;
         }
 
-        public List<Move> GenerelFindMoves(int index, ChessPiece[] gameState, List<Move> result)
+        public List<Move> GenerelFindMoves(int index, ChessPiece[] gameState)
         {
+            List <Move> result = new List<Move>();
+
             int fromRow = index / 8;
             int fromCol = index % 8;
 
             foreach (var item in this.directions)
             {
-                int row = fromRow + item.Item1;
-                int col = fromCol + item.Item2;
+                int row = fromRow + item.row;
+                int col = fromCol + item.col;
                 int disCounter = this.distance;
 
                 while (row >= 0 && row <= 7 && col >= 0 && col <= 7 && disCounter > 0)
@@ -87,8 +210,8 @@ namespace G12_ChessApplication.Src.chess_game.util
                     result.Add(new Move(index, newIndex));
 
                     disCounter--;
-                    row += item.Item1;
-                    col += item.Item2;
+                    row += item.row;
+                    col += item.col;
                 }
             }
 
@@ -99,7 +222,7 @@ namespace G12_ChessApplication.Src.chess_game.util
         {
             moves = new List<Move>();
             // Search for own king
-            int kingIndex = GetOwnKingIndex(ref gameState);
+            int kingIndex = Game.GetOwnKingIndex(ref gameState);
 
             // Check for diagonal or horizontal or vetical connection to the king
             int kingRow = (kingIndex / 8);
@@ -157,84 +280,70 @@ namespace G12_ChessApplication.Src.chess_game.util
                 return LoopSteps(index, gameState, ref row, ref col, colStep, rowStep, false, ref moves);
             }
             return false;
-
-            bool IsPathToKingBlocked(int startIndex, ChessPiece[] gameState, int pieceRow, int pieceCol, int rowStep, int colStep, int steps, ref List<Move> moves)
+        }
+        public bool IsPathToKingBlocked(int startIndex, ChessPiece[] gameState, int pieceRow, int pieceCol, int rowStep, int colStep, int steps, ref List<Move> moves)
+        {
+            // Start at i = 1, so the piece doesnt check itself
+            for (int i = 1; i < steps; i++)
             {
-                // Start at i = 1, so the piece doesnt check itself
-                for (int i = 1; i < steps; i++)
+                int intermediateRow = pieceRow + i * rowStep;
+                int intermediateCol = pieceCol + i * colStep;
+                int intermediateIndex = intermediateRow * 8 + intermediateCol;
+                if (gameState[intermediateIndex] != null)
                 {
-                    int intermediateRow = pieceRow + i * rowStep;
-                    int intermediateCol = pieceCol + i * colStep;
-                    int intermediateIndex = intermediateRow * 8 + intermediateCol;
-                    if (gameState[intermediateIndex] != null)
+                    if (gameState[intermediateIndex] is King && gameState[intermediateIndex].ChessColor != gameState[startIndex].ChessColor)
                     {
-                        return true;
+                        return false;
                     }
-                    else
-                    {
-                        moves.Add(new Move(startIndex, intermediateIndex));
-                    }
+                    return true;
                 }
-
-                return false;
+                else
+                {
+                    moves.Add(new Move(startIndex, intermediateIndex));
+                }
             }
 
-            bool LoopSteps(int startIndex, ChessPiece[] gameState, ref int row, ref int col, int colStep, int rowStep, bool dia, ref List<Move> moves)
+            return false;
+        }
+
+        public bool LoopSteps(int startIndex, ChessPiece[] gameState, ref int row, ref int col, int colStep, int rowStep, bool dia, ref List<Move> moves)
+        {
+            col += colStep;
+            row += rowStep;
+            while (row >= 0 && row <= 7 && col >= 0 && col <= 7)
             {
+                int newIndex = row * 8 + col;
+                ChessPiece interceptingPiece = gameState[newIndex];
+
+                if (interceptingPiece != null)
+                {
+                    if (interceptingPiece.ChessColor == ChessColor)
+                    {
+                        return false;
+                    }
+
+                    bool retVal = false;
+                    // When checking for a diagonal binding, only the Queen or bishop can bind.
+                    // For a horizontal or vertical binding, only a queen or a rook can bind.
+                    // Dia stands for diagonal binding.
+                    if (interceptingPiece is Queen || (dia && interceptingPiece is Bishop) || (!dia && interceptingPiece is Rook))
+                    {
+                        retVal = true;
+                    }
+
+                    moves.Add(new Move(startIndex, newIndex, true));
+                    return retVal;
+                }
+                else
+                {
+                    moves.Add(new Move(startIndex, newIndex));
+                }
+
                 col += colStep;
                 row += rowStep;
-                while (row >= 0 && row <= 7 && col >= 0 && col <= 7)
-                {
-                    int newIndex = row * 8 + col;
-                    ChessPiece interceptingPiece = gameState[newIndex];
-
-                    if (interceptingPiece != null)
-                    {
-                        if (interceptingPiece.ChessColor == ChessColor)
-                        {
-                            return false;
-                        }
-
-                        bool retVal = false;
-                        // When checking for a diagonal binding, only the Queen or bishop can bind.
-                        // For a horizontal or vertical binding, only a queen or a rook can bind.
-                        // Dia stands for diagonal binding.
-                        if (interceptingPiece is Queen || (dia && interceptingPiece is Bishop) || (!dia && interceptingPiece is Rook))
-                        {
-                            retVal = true;
-                        }
-
-                        moves.Add(new Move(startIndex, newIndex, true));
-                        return retVal;
-                    }
-                    else
-                    {
-                        moves.Add(new Move(startIndex, newIndex));
-                    }
-
-                    col += colStep;
-                    row += rowStep;
-                }
-                return false;
             }
+            return false;
         }
 
-        private int GetOwnKingIndex(ref ChessPiece[] gameState)
-        {
-            int kingIndex = -1;
-            for (int i = 0; i < gameState.Length; i++)
-            {
-                if (gameState[i] is King king)
-                {
-                    if (king.ChessColor == ChessColor)
-                    {
-                        kingIndex = i;
-                        break;
-                    }
-                }
-            }
-
-            return kingIndex;
-        }
     }
 }

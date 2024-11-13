@@ -95,7 +95,7 @@ namespace G12_ChessApplication.Src.chess_game.util
                 {
                     ChessPiece newPiece = createPiece();
                     Grid square = Children[squareIndex] as Grid;
-                    square.Children.Add(newPiece);
+                    square.Children.Add(new ChessPieceUI(newPiece.uri));
 
                     squareIndex += 1 * color;
                 }
@@ -115,7 +115,7 @@ namespace G12_ChessApplication.Src.chess_game.util
             {
                 for (int i = 0; i < square.Children.Count; i++)
                 {
-                    if (square.Children[i] is ChessPiece)
+                    if (square.Children[i] is ChessPieceUI)
                     {
                         square.Children.Remove(square.Children[i]);
                     }

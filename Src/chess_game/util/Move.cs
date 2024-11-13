@@ -2,17 +2,20 @@
 
 
 using System.Text.Json.Serialization;
+using System.Xml.Serialization;
 
 namespace G12_ChessApplication.Src.chess_game.util
 {
     [JsonDerivedType(typeof(Move), "Move")]
     [JsonDerivedType(typeof(CastlingMove), "CastlingMove")]
     [JsonDerivedType(typeof(EnPassantMove), "EnPassantMove")]
+    [XmlInclude(typeof(EnPassantMove))]
+    [XmlInclude(typeof(CastlingMove))]
     public class Move
     {
         public int fromIndex { get; set; }
         public int toIndex { get; set; }
-        public bool isACapture { get; }
+        public bool isACapture { get; set; }
         public ChessPiece movingPiece { get; set; } = null;
         public ChessPiece capturedPiece { get; set; } = null; 
 
@@ -23,6 +26,8 @@ namespace G12_ChessApplication.Src.chess_game.util
             this.toIndex = toIndex;
             this.isACapture = isACapture;
         }
+
+        public Move() { }
 
         public Move(Move move)
         {
@@ -63,6 +68,7 @@ namespace G12_ChessApplication.Src.chess_game.util
             this.capturedIndex = enPassantMove.capturedIndex;
             this.enPassantPiece = enPassantMove.enPassantPiece;
         }
+        public EnPassantMove () { }
 
         public override void InvertMove()
         {
@@ -73,29 +79,27 @@ namespace G12_ChessApplication.Src.chess_game.util
 
     public class CastlingMove : Move
     {
-        public Move kingMove;
-        public Move rookMove;
+        public Move rookMove { get; set; }
         [JsonConstructor]
         public CastlingMove(int fromIndex, int toIndex, int rookFromIndex, int rookToIndex) : base(fromIndex, toIndex)
         {
-            kingMove = new Move(fromIndex, toIndex);
             rookMove = new Move(rookFromIndex, rookToIndex);
         }
         public CastlingMove(CastlingMove castlingMove) : base(castlingMove)
         {
-            kingMove = new Move(castlingMove.kingMove.fromIndex, castlingMove.kingMove.toIndex);
             rookMove = new Move(castlingMove.rookMove.fromIndex, castlingMove.rookMove.toIndex);
         }
+        public CastlingMove() { }
 
         public override void InvertMove()
         {
-            kingMove.InvertMove();
+            base.InvertMove();
             rookMove.InvertMove();
         }
 
         public override void ReverseMove()
         {
-            kingMove.ReverseMove();
+            base.ReverseMove();
             rookMove.ReverseMove();
         }
 

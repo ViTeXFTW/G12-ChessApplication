@@ -5,8 +5,11 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
+using System.Printing;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 
 
@@ -22,6 +25,13 @@ namespace G12_ChessApplication.Src.chess_game
         public bool IsPieceSelected { get; set; }
         public int SelectedPieceIndex { get; set; }
 
+        public int? selectedSquareIndex = null;
+        public static bool oneCheck { get; set; } = false;
+        public static bool twoCheck { get; set; } = false;
+        public bool checkMate { get; set; } = false;
+        public bool staleMate { get; set; } = false;
+        public static List<Move> checkIndexes { get; set; } = new List<Move>();
+
         public ChessPiece[] gameState = new ChessPiece[64];
         public MainWindow mainWindow { get; set; }
 
@@ -34,7 +44,47 @@ namespace G12_ChessApplication.Src.chess_game
             gameState = FenParser.CreatePieceArray();
         }
 
-        public abstract void SquareClicked(int index);
+        public virtual void SquareClicked(int index)
+        {
+            if (IsPieceSelected)
+            {
+                HandleClick(index);
+
+                DeselectPiece();
+                mainWindow.ResetSquareColor(SelectedPieceIndex);
+                selectedSquareIndex = null;
+                mainWindow.RemoveLegalMoves(prevLegalMoves);
+            }
+            else
+            {
+                if (CanSelectPieceAt(index) && !staleMate && !checkMate)
+                {
+                    List<Move> legalMoves;
+                    Move lastMove = OpponentMoves.Count > 0 ? OpponentMoves.Last() : null;
+                    legalMoves = gameState[index].FindLegalMoves(index, ref gameState, lastMove);
+
+
+                    mainWindow.ShowLegalMoves(legalMoves);
+                    prevLegalMoves = legalMoves;
+                    // Deselect the previous selection if any
+                    if (selectedSquareIndex != null)
+                    {
+                        mainWindow.ResetSquareColor(selectedSquareIndex.Value);
+                    }
+
+                    // Select the piece
+                    SelectPieceAt(index);
+
+                    // Highlight the selected square
+                    mainWindow.HighlightSquare(index);
+
+                    // Keep track of the selected square index
+                    selectedSquareIndex = index;
+                }
+            }
+        }
+
+        public abstract void HandleClick(int index);
 
         public void SetGameState(string board)
         {
@@ -85,6 +135,19 @@ namespace G12_ChessApplication.Src.chess_game
                 }
             }
 
+            if (move is CastlingMove castlingMove)
+            {
+                castlingMove.rookMove.movingPiece = (ChessPiece)gameState[castlingMove.rookMove.fromIndex].Clone();
+                gameState[castlingMove.rookMove.fromIndex].hasMoved = true;
+                gameState[castlingMove.rookMove.toIndex] = gameState[castlingMove.rookMove.fromIndex];
+                gameState[castlingMove.rookMove.fromIndex] = null;
+            }
+
+            if (gameState[move.fromIndex] is Rook or King)
+            {
+                gameState[move.fromIndex].hasMoved = true;
+            }
+
             if (move is EnPassantMove enPassantMove)
             {
                 enPassantMove.enPassantPiece = (ChessPiece)gameState[enPassantMove.capturedIndex].Clone();
@@ -92,7 +155,7 @@ namespace G12_ChessApplication.Src.chess_game
 
             }
 
-            if (move.isACapture)
+            if (move.isACapture || gameState[move.toIndex] != null)
             {
                 move.capturedPiece = (ChessPiece)gameState[move.toIndex].Clone();
             }
@@ -107,7 +170,8 @@ namespace G12_ChessApplication.Src.chess_game
             }
             gameState[move.toIndex] = gameState[move.fromIndex];
             gameState[move.fromIndex] = null;
-            DeselectPiece();
+            HandleChecks();
+
         }
         public void ApplyReverseMove(Move move)
         {
@@ -120,12 +184,19 @@ namespace G12_ChessApplication.Src.chess_game
                 OpponentMoves.Remove(move);
             }
 
+            if (move is CastlingMove castlingMove)
+            {
+                gameState[castlingMove.rookMove.toIndex] = castlingMove.rookMove.movingPiece;
+                gameState[castlingMove.rookMove.fromIndex] = null;
+            }
+
             if (move is EnPassantMove enPassantMove)
             {
                 gameState[enPassantMove.capturedIndex] = enPassantMove.enPassantPiece;
             }
             gameState[move.fromIndex] = move.capturedPiece;
             gameState[move.toIndex] = move.movingPiece;
+            HandleChecks();
         }
 
         public void AddOpponentMove(Move move)
@@ -159,14 +230,117 @@ namespace G12_ChessApplication.Src.chess_game
             {
                 moveToUndo.ReverseMove();
                 ApplyReverseMove(moveToUndo);
-                mainWindow.UpdateUIAfterMove(moveToUndo, true);
+                mainWindow.UpdateUIAfterMove();
                 UserPlayer.ChangePlayer();
+                HandleChecks();
             }
         }
 
         public void CancelMove()
         {
 
+        }
+
+        public static List<List<Move>> IsKingInCheck(ref ChessPiece[] gameState, int indexToCheck = -1)
+        {
+            List<List<Move>> checkIndexes = new List<List<Move>>();
+            int kingIndex = GetOwnKingIndex(ref gameState);
+            ChessPiece kingPiece = gameState[kingIndex];
+            
+            kingIndex = indexToCheck == -1 ? kingIndex : indexToCheck;
+
+            int kingRow = kingIndex / 8;
+            int kingCol = kingIndex % 8;
+            for (int i = 0; i < gameState.Length; i++)
+            {
+                if (gameState[i] == null || gameState[i].ChessColor == kingPiece.ChessColor)
+                {
+                    continue;
+                }
+
+                List<Move> moves;
+                if (gameState[i].CanTakePieceAt(i, kingIndex, ref gameState, out moves))
+                {
+                    moves.Add(new Move(i, i, true));
+                    checkIndexes.Add(moves);
+                }
+            }
+
+            return checkIndexes;
+
+        }
+
+        public static int GetOwnKingIndex(ref ChessPiece[] gameState)
+        {
+            int kingIndex = -1;
+            for (int i = 0; i < gameState.Length; i++)
+            {
+                if (gameState[i] is King king)
+                {
+                    if (king.ChessColor == Game.UserPlayer.Color)
+                    {
+                        kingIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            return kingIndex;
+        }
+
+        public void HandleChecks()
+        {
+            List<List<Move>> checks = IsKingInCheck(ref gameState);
+            Trace.WriteLine("Amount of checks: " + checks.Count);
+            checkIndexes.Clear();
+            oneCheck = checks.Count == 1;
+            twoCheck = checks.Count == 2;
+            checkMate = false;
+            staleMate = false;
+
+            if (oneCheck)
+            {
+                checkIndexes = checks.First();
+            }
+            bool cantMove = true;
+            for (int i = 0; i < gameState.Length; i++)
+            {
+                if (gameState[i] != null && gameState[i].ChessColor == Game.UserPlayer.Color)
+                {
+                    List<Move> legalMoves;
+                    if (OpponentMoves.Count > 0)
+                    {
+                        legalMoves = gameState[i].FindLegalMoves(i, ref gameState, OpponentMoves.Last());
+                    }
+                    else
+                    {
+                        legalMoves = gameState[i].FindLegalMoves(i, ref gameState, null);
+                    }
+                    if (legalMoves.Count > 0)
+                    {
+                        cantMove = false;
+                    }
+                }
+            }
+
+            if (cantMove)
+            {
+                if (oneCheck || twoCheck)
+                {
+                    // CHECKMATE
+                    checkMate = true;
+                    ChessColor chessColor = Game.UserPlayer.Color == ChessColor.WHITE ? ChessColor.BLACK : ChessColor.WHITE;
+                    Trace.WriteLine("Player " + chessColor + " has won!!!!");
+                    MessageBox.Show("Player " + chessColor + " has won!!!!");
+                }
+                else
+                {
+                    staleMate = true;
+                    Trace.WriteLine("ITS A STALEMATE DUMBASS");
+                    MessageBox.Show("ITS A STALEMATE DUMBASS");
+                }
+
+            }
         }
     }
 }

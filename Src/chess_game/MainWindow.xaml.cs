@@ -43,6 +43,10 @@ namespace G12_ChessApplication
                 {
                     PlayerColor = ChessColor.BLACK;
                 }
+                else
+                {
+                    PlayerColor = ChessColor.WHITE;
+                }
             }
             GameType = gameType;
 
@@ -109,44 +113,29 @@ namespace G12_ChessApplication
             squareColor.Fill = isLightSquare ? Brushes.Beige : Brushes.DarkGreen;
         }
 
-        public void UpdateUIAfterMove(Move move, bool isReverse)
+        public void UpdateUIAfterMove()
         {
-            Grid squareFrom = (Grid)mainBoard.Children[move.fromIndex];
-            Grid squareTo = (Grid)mainBoard.Children[move.toIndex];
-            ChessPiece pieceToMove = (ChessPiece)squareFrom.Children[1];
-            squareFrom.Children.Remove(pieceToMove);
-            if (isReverse && move.capturedPiece != null)
+            for (int i = 0; i < mainBoard.Children.Count; i++)
             {
-                squareFrom.Children.Add(move.capturedPiece);
-            }
-            else
-            {
-                for (int i = 0; i < squareTo.Children.Count; i++)
+                bool pieceFound = false;
+                Grid square = (Grid)mainBoard.Children[i];
+                for (int j = 0; j < square.Children.Count; j++)
                 {
-                    if (squareTo.Children[i] is ChessPiece)
+                    if (square.Children[j] is ChessPieceUI)
                     {
-                        squareTo.Children.RemoveAt(i);
+                        square.Children.RemoveAt(j);
+                        if (game.gameState[i] != null)
+                        {
+                            square.Children.Add(new ChessPieceUI(game.gameState[i].uri));
+                        }
+                        pieceFound = true;
+                        break;
                     }
                 }
-            }
-
-            squareTo.Children.Add(move.movingPiece);
-
-            if (move is EnPassantMove enPassantMove)
-            {
-                Grid enPassantSquare;
-                if (isReverse)
+                if ( !pieceFound && game.gameState[i] != null)
                 {
-                    enPassantSquare = (Grid)mainBoard.Children[enPassantMove.capturedIndex];
-                    enPassantSquare.Children.Add(enPassantMove.enPassantPiece);
+                    square.Children.Add(new ChessPieceUI(game.gameState[i].uri));
                 }
-                else
-                {
-                    enPassantSquare = (Grid)mainBoard.Children[enPassantMove.capturedIndex];
-                    ChessPiece enPassantPiece = (ChessPiece)enPassantSquare.Children[1];
-                    enPassantSquare.Children.Remove(enPassantPiece);
-                }
-                
             }
         }
 
