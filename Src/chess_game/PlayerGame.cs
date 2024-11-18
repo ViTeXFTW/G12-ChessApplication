@@ -18,7 +18,6 @@ namespace G12_ChessApplication.Src.chess_game
 {
     class PlayerGame : Game
     {
-
         private TcpClient _client { get; set; }
         private TcpListener _server { get; set; }
         private NetworkStream _stream { get; set; }
@@ -76,9 +75,10 @@ namespace G12_ChessApplication.Src.chess_game
             {
                 try
                 {
-                    Move oppMove = ReceiveObject(_stream);
+                    Object obj = ReceiveObject(_stream);
+
                     //Move oppMove = ReceiveMove(_stream);
-                    HandleMessage(oppMove);
+                    HandleMessage(obj);
                 }
                 catch
                 {
@@ -125,13 +125,15 @@ namespace G12_ChessApplication.Src.chess_game
             }
         }
 
-        private void HandleMessage(Move move)
+        private void HandleMessage(Object obj)
         {
-            Trace.WriteLine($"Client: {move}\n");
             Application.Current.Dispatcher.BeginInvoke(
               DispatcherPriority.Background,
                 new Action(() => {
-                    ApplyMove(move);
+                    if (obj is Move move)
+                    {
+                        ApplyMove(move);
+                    }
                 }));
             turnToMove = true;
         }
@@ -142,7 +144,7 @@ namespace G12_ChessApplication.Src.chess_game
         }
 
 
-        public void SendObject(NetworkStream stream, Move obj)
+        public void SendObject(NetworkStream stream, Object obj)
         {
             // Serialize the object to JSON
             string jsonString = JsonSerializer.Serialize(obj);
@@ -157,7 +159,7 @@ namespace G12_ChessApplication.Src.chess_game
             // Send the serialized JSON object
             stream.Write(jsonBytes, 0, jsonBytes.Length);
         }
-        public Move ReceiveObject(NetworkStream stream)
+        public Object ReceiveObject(NetworkStream stream)
         {
             // Read the length prefix to determine the size of the incoming data
             byte[] lengthPrefix = new byte[4];
@@ -172,10 +174,18 @@ namespace G12_ChessApplication.Src.chess_game
             string jsonString = Encoding.UTF8.GetString(jsonBytes);
 
             // Deserialize JSON string to object
-            Move move = JsonSerializer.Deserialize<Move>(jsonString);
-            move.InvertMove();
+            try
+            {
+                Move move = JsonSerializer.Deserialize<Move>(jsonString);
+                move.InvertMove();
+                return move;
+            }
+            catch (JsonException)
+            {
+                string msg = JsonSerializer.Deserialize<string>(jsonString);
+                return msg;
+            }
 
-            return move;
         }
 
         // Method to send the Move object
@@ -249,10 +259,6 @@ namespace G12_ChessApplication.Src.chess_game
                     _stream = null;
                 }
                 selectedSquareIndex = null;
-            }
-            else
-            {
-                mainWindow.ResetSquareColor(SelectedPieceIndex);
             }
         }
     }

@@ -53,6 +53,7 @@ namespace G12_ChessApplication.Src.chess_game
 
                 DeselectPiece();
                 selectedSquareIndex = null;
+                mainWindow.ResetLegalMoveColor(SelectedPieceIndex);
                 mainWindow.RemoveLegalMoves(prevLegalMoves);
             }
             else
@@ -286,6 +287,7 @@ namespace G12_ChessApplication.Src.chess_game
                 }
             }
 
+
             return checkIndexes;
 
         }
@@ -343,9 +345,10 @@ namespace G12_ChessApplication.Src.chess_game
                 }
             }
 
-            if (cantMove)
+            if (oneCheck || twoCheck)
             {
-                if (oneCheck || twoCheck)
+                mainWindow.HighlightSquare(GetOwnKingIndex(ref gameState), MainWindow.DefaultCheckColor);
+                if (cantMove)
                 {
                     // CHECKMATE
                     checkMate = true;
@@ -359,7 +362,6 @@ namespace G12_ChessApplication.Src.chess_game
                     Trace.WriteLine("ITS A STALEMATE DUMBASS");
                     MessageBox.Show("ITS A STALEMATE DUMBASS");
                 }
-
             }
         }
     }

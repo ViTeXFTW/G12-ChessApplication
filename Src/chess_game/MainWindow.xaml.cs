@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Drawing;
 using System.Numerics;
 using System.Reflection;
 using System.Text;
@@ -24,18 +25,22 @@ namespace G12_ChessApplication
     {
         public event EventHandler goBack;
         public static ChessBoard mainBoard;
-        private Game game;
+        public Game game;
         private string GameCode = string.Empty;
         public static ChessColor PlayerColor = ChessColor.WHITE;
         public string GameType { get; }
         public static int boardHeight { get; set; } = 500;
         public static int boardWidth { get; set; } = 500;
 
+        public static SolidColorBrush DefaultCheckColor = Brushes.Cyan;
+        public static SolidColorBrush DefaultLastMoveColor = Brushes.IndianRed;
+        public static SolidColorBrush DefaultLegalMoveColor = Brushes.Gray;
+        public static int DefaultLegalMoveRatio = 4;
+
 
         public MainWindow(string gameType, string code = "")
         {
             InitializeComponent();
-            
             if (code != "")
             {
                 GameCode = code;
@@ -75,10 +80,10 @@ namespace G12_ChessApplication
         private void InitializeBoard(string board = "")
         {
             
-            mainBoard = new ChessBoard(boardHeight, boardWidth);
+            mainBoard = new ChessBoard();
             //mainBoard.VerticalAlignment = VerticalAlignment.Top;
             //mainBoard.HorizontalAlignment = HorizontalAlignment.Left;
-            foreach (Grid square in mainBoard.Children)
+            foreach (ChessSquareUI square in mainBoard.Children)
             {
                 square.MouseDown += OnBoardClick;
             }
@@ -87,7 +92,7 @@ namespace G12_ChessApplication
 
         private void OnBoardClick(object sender, MouseButtonEventArgs e)
         {
-            Grid square = (Grid)sender;
+            ChessSquareUI square = (ChessSquareUI)sender;
             int index = mainBoard.Children.IndexOf(square);
             game.SquareClicked(index);
         }
@@ -96,25 +101,23 @@ namespace G12_ChessApplication
         {
             if (color == null)
             {
-                color = Brushes.IndianRed;
+                color = DefaultLastMoveColor;
             }
-            Grid square = (Grid)mainBoard.Children[index];
-            Rectangle squareColor = (Rectangle)square.Children[0];
-
-            squareColor.Fill = color;
+            ChessSquareUI square = (ChessSquareUI)mainBoard.Children[index];
+            square.SetNewColor(color);
         }
 
         public void ResetSquareColor(int index)
         {
-            Grid square = (Grid)mainBoard.Children[index];
-            Rectangle squareColor = (Rectangle)square.Children[0];
+            ResetLegalMoveColor(index);
+            ChessSquareUI square = (ChessSquareUI)mainBoard.Children[index];
+            square.SetPrevColor();
+        }
 
-            // Calculate the original color based on the square's position
-            int row = index / 8;
-            int col = index % 8;
-            bool isLightSquare = (row + col) % 2 == 0;
-
-            squareColor.Fill = isLightSquare ? Brushes.Beige : Brushes.DarkGreen;
+        public void ResetLegalMoveColor(int index)
+        {
+            ChessSquareUI square = (ChessSquareUI)mainBoard.Children[index];
+            square.RemoveLegalMoveColor();
         }
 
         public void UpdateUIAfterMove()
@@ -122,7 +125,7 @@ namespace G12_ChessApplication
             for (int i = 0; i < mainBoard.Children.Count; i++)
             {
                 bool pieceFound = false;
-                Grid square = (Grid)mainBoard.Children[i];
+                ChessSquareUI square = (ChessSquareUI)mainBoard.Children[i];
                 for (int j = 0; j < square.Children.Count; j++)
                 {
                     if (square.Children[j] is ChessPieceUI)
@@ -149,15 +152,11 @@ namespace G12_ChessApplication
             {
                 if (item.isACapture)
                 {
-                    HighlightSquare(item.toIndex, Brushes.Gray);
+                    HighlightSquare(item.toIndex, DefaultLegalMoveColor);
                 }
-                else if (mainBoard.Children[item.toIndex] is Grid square)
+                else if (mainBoard.Children[item.toIndex] is ChessSquareUI square)
                 {
-                    Ellipse ellipse = new Ellipse();
-                    ellipse.Width = 20;
-                    ellipse.Height = 20;
-                    ellipse.Fill = Brushes.Gray;
-                    square.Children.Add(ellipse);
+                    square.Children.Add(new LegalMoveUI());
                 }
             }
         }
@@ -166,11 +165,15 @@ namespace G12_ChessApplication
         {
             foreach (var item in legalMoves)
             {
-                if (mainBoard.Children[item.toIndex] is Grid square)
+                if (item.isACapture)
+                {
+                    ResetLegalMoveColor(item.toIndex);
+                }
+                if (mainBoard.Children[item.toIndex] is ChessSquareUI square)
                 {
                     foreach (var child in square.Children)
                     {
-                        if (child is Ellipse ellipse)
+                        if (child is LegalMoveUI ellipse)
                         {
                             square.Children.Remove(ellipse);
                             break;
