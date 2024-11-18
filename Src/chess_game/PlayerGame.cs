@@ -36,6 +36,7 @@ namespace G12_ChessApplication.Src.chess_game
                 turnToMove = false;
             }
             SetUpSocket();
+            Online = true;
         }
 
         private void SetUpSocket()
@@ -134,13 +135,44 @@ namespace G12_ChessApplication.Src.chess_game
                     {
                         ApplyMove(move);
                     }
+                    else if (obj is String s)
+                    {
+                        HandleStringMsg(s);
+                    }
                 }));
             turnToMove = true;
         }
 
-        public void SendButton_Click(object sender, RoutedEventArgs e)
+        private void HandleStringMsg(string s)
         {
+            string[] command = s.Split(' ');
+            if (command.Length != 0)
+            {
+                switch(command[0])
+                {
+                    case "Check":
+                        mainWindow.HighlightSquare(ConvertIndex(Convert.ToInt32(command[1])), MainWindow.DefaultCheckColor);
+                            break;
+                    case "UnCheck":
+                        mainWindow.ResetCheckColor(ConvertIndex(Convert.ToInt32(command[1])));
+                        break;
+                    case "CheckMate":
+                        checkMate = true;
+                        MessageBox.Show("YOU WIN");
+                        break;
+                    case "StaleMate":
+                        staleMate = true;
+                        MessageBox.Show("StaleMate dumbass!");
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
 
+        private int ConvertIndex(int index)
+        {
+            return Math.Abs(index - 63);
         }
 
 
@@ -260,6 +292,11 @@ namespace G12_ChessApplication.Src.chess_game
                 }
                 selectedSquareIndex = null;
             }
+        }
+
+        public override void SendMsg(string msg)
+        {
+            SendObject(_stream, msg);
         }
     }
 }

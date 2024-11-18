@@ -110,6 +110,7 @@ namespace G12_ChessApplication
         public void ResetSquareColor(int index)
         {
             ResetLegalMoveColor(index);
+            ResetCheckColor(index);
             ChessSquareUI square = (ChessSquareUI)mainBoard.Children[index];
             square.SetPrevColor();
         }
@@ -120,6 +121,11 @@ namespace G12_ChessApplication
             square.RemoveLegalMoveColor();
         }
 
+        public void ResetCheckColor(int index)
+        {
+            ChessSquareUI square = (ChessSquareUI)mainBoard.Children[index];
+            square.RemoveCheckColor();
+        }
         public void UpdateUIAfterMove()
         {
             for (int i = 0; i < mainBoard.Children.Count; i++)

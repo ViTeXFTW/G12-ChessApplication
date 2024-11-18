@@ -29,8 +29,11 @@ namespace G12_ChessApplication.Src.chess_game
         public int? selectedSquareIndex = null;
         public static bool oneCheck { get; set; } = false;
         public static bool twoCheck { get; set; } = false;
+        public bool isCheckIndex { get; set; } = false;
+        public int oldKingIndex { get; set; } = 0;
         public bool checkMate { get; set; } = false;
         public bool staleMate { get; set; } = false;
+        public bool Online { get; set; } = false;
         public static List<Move> checkIndexes { get; set; } = new List<Move>();
 
         public ChessPiece[] gameState = new ChessPiece[64];
@@ -179,9 +182,9 @@ namespace G12_ChessApplication.Src.chess_game
             }
             gameState[move.toIndex] = gameState[move.fromIndex];
             gameState[move.fromIndex] = null;
-            HandleChecks();
             mainWindow.UpdateUIAfterMove();
             mainWindow.HighLightMove(move);
+            HandleChecks();
 
         }
         public void ApplyReverseMove(Move move)
@@ -216,8 +219,8 @@ namespace G12_ChessApplication.Src.chess_game
             }
             gameState[move.fromIndex] = move.capturedPiece;
             gameState[move.toIndex] = move.movingPiece;
-            HandleChecks();
             mainWindow.UpdateUIAfterMove();
+            HandleChecks();
         }
 
         public void AddOpponentMove(Move move)
@@ -347,22 +350,46 @@ namespace G12_ChessApplication.Src.chess_game
 
             if (oneCheck || twoCheck)
             {
-                mainWindow.HighlightSquare(GetOwnKingIndex(ref gameState), MainWindow.DefaultCheckColor);
+                oldKingIndex = GetOwnKingIndex(ref gameState);
+                if (Online)
+                {
+                    isCheckIndex = true;
+                    SendMsg("Check " + oldKingIndex);
+                }
+                mainWindow.HighlightSquare(oldKingIndex, MainWindow.DefaultCheckColor);
                 if (cantMove)
                 {
                     // CHECKMATE
                     checkMate = true;
                     ChessColor chessColor = Game.UserPlayer.Color == ChessColor.WHITE ? ChessColor.BLACK : ChessColor.WHITE;
+                    if (Online)
+                    {
+                        SendMsg("CheckMate  " + chessColor);
+                    }
                     Trace.WriteLine("Player " + chessColor + " has won!!!!");
-                    MessageBox.Show("Player " + chessColor + " has won!!!!");
-                }
-                else
-                {
-                    staleMate = true;
-                    Trace.WriteLine("ITS A STALEMATE DUMBASS");
-                    MessageBox.Show("ITS A STALEMATE DUMBASS");
+                    MessageBox.Show("Player " + chessColor + " has won you lose !!!!");
                 }
             }
+            else if (cantMove)
+            {
+                if (Online)
+                {
+                    SendMsg("StaleMate");
+                }
+                staleMate = true;
+                MessageBox.Show("BUHUUU YOU LOSE!");
+            }
+            else
+            {
+                if (Online && isCheckIndex)
+                {
+                    isCheckIndex = false;
+                    SendMsg("UnCheck " + oldKingIndex);
+                }
+                mainWindow.ResetCheckColor(oldKingIndex);
+            }
         }
+
+        public virtual void SendMsg(string msg) { }
     }
 }

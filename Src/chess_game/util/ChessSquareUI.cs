@@ -44,6 +44,15 @@ namespace G12_ChessApplication.Src.chess_game.util
             }
         }
 
+        public void RemoveCheckColor()
+        {
+            if (Background == MainWindow.DefaultCheckColor)
+            {
+                Colors.Remove(Colors.Last());
+                SetColor();
+            }
+        }
+
         private void SetColor()
         {
             if (Colors.Count > 0)
