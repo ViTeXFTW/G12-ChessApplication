@@ -47,9 +47,7 @@ namespace G12_ChessApplication.Src.chess_game.util
 
         public virtual void ReverseMove()
         {
-            int temp = fromIndex;
-            this.fromIndex = toIndex;
-            this.toIndex = temp;
+            (this.fromIndex, this.toIndex) = (this.toIndex, this.fromIndex);
         }
 
         public virtual string GetMoveString()
@@ -100,15 +98,19 @@ namespace G12_ChessApplication.Src.chess_game.util
 
     public class CastlingMove : Move
     {
-        public Move rookMove { get; set; }
+        public Move rookMove { get; set; } = null;
         [JsonConstructor]
+        public CastlingMove(int fromIndex, int toIndex, Move rookMove) : base(fromIndex, toIndex)
+        {
+            this.rookMove = rookMove;
+        }
         public CastlingMove(int fromIndex, int toIndex, int rookFromIndex, int rookToIndex) : base(fromIndex, toIndex)
         {
-            rookMove = new Move(rookFromIndex, rookToIndex);
+            this.rookMove = new Move(rookFromIndex, rookToIndex);
         }
         public CastlingMove(CastlingMove castlingMove) : base(castlingMove)
         {
-            rookMove = new Move(castlingMove.rookMove.fromIndex, castlingMove.rookMove.toIndex);
+            rookMove = new Move(castlingMove.rookMove);
         }
         public CastlingMove() { }
 

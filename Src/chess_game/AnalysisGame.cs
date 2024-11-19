@@ -51,9 +51,6 @@ namespace G12_ChessApplication.Src.chess_game
                 m.WhiteMove = move.GetMoveString();
                 mainWindow.GameHistory.Items.Add(m);
             }
-            
-            
         }
     }
-
 }
