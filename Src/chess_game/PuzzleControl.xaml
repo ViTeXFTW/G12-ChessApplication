@@ -12,8 +12,7 @@
                 <Grid Background="#FFE5E5E5"/>
             </TabItem>
             <TabItem Header="Puzzles">
-                <Grid Background="#FFE5E5E5">
-                </Grid>
+                <Grid Background="#FFE5E5E5"/>
             </TabItem>
             <TabItem Header="Settings">
                 <Grid Background="#FFE5E5E5"/>

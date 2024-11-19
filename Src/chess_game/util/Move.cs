@@ -1,6 +1,7 @@
 
 
 
+using System.Diagnostics;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
@@ -49,6 +50,26 @@ namespace G12_ChessApplication.Src.chess_game.util
             int temp = fromIndex;
             this.fromIndex = toIndex;
             this.toIndex = temp;
+        }
+
+        public virtual string GetMoveString()
+        {
+            string move = this.movingPiece.pieceCharacter;
+            char col = (char)(this.toIndex % 8 + 'a');
+            int row = Math.Abs(this.toIndex / 8 - 7) + 1;
+
+            if (this.isACapture || this is EnPassantMove)
+            {
+                if (this.movingPiece is Pawn)
+                {
+                    move += (char)(this.fromIndex % 8 + 'a');
+                }
+                move += "x";
+            }
+            move += col;
+            move += row;
+            Trace.WriteLine(move);
+            return move;
         }
     }
 
@@ -101,6 +122,22 @@ namespace G12_ChessApplication.Src.chess_game.util
         {
             base.ReverseMove();
             rookMove.ReverseMove();
+        }
+
+        public override string GetMoveString()
+        {
+            string move = "";
+            if (Math.Abs(rookMove.toIndex - rookMove.fromIndex) > 2) // Long Castling
+            {
+                move = "O-O-O";
+            }
+            else
+            {
+                move = "O-O";
+            }
+
+            Trace.WriteLine(move);
+            return move;
         }
 
     }

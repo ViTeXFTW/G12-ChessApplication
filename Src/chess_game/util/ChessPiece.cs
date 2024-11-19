@@ -34,6 +34,7 @@ namespace G12_ChessApplication.Src.chess_game.util
         public List<Direction> directions { get; set; }
         public int distance { get; set; } = 100;
         public string uri { get; set; } = string.Empty;
+        public string pieceCharacter { get; set; } = "";
 
         [JsonConstructor]
         public ChessPiece(ChessColor color)
@@ -50,6 +51,7 @@ namespace G12_ChessApplication.Src.chess_game.util
             this.distance = chessPiece.distance;
             this.hasMoved = chessPiece.hasMoved;
             this.uri = chessPiece.uri;
+            this.pieceCharacter = chessPiece.pieceCharacter;
         }
 
         public virtual bool CanTakePieceAt(int ownIndex, int attackIndex, ref ChessPiece[] gameState, out List<Move> moves)
@@ -148,20 +150,35 @@ namespace G12_ChessApplication.Src.chess_game.util
         public virtual List<Move> FindLegalMoves(int index, ref ChessPiece[] gameState, Move lastMove)
         {
             List<Move> result = new List<Move>();
+            List<Move> bindingMoves = new List<Move>();
+            List<Move> generalMoves = new List<Move>();
             List<Move> tempResult = new List<Move>();
             if (Game.twoCheck)
             {
                 return tempResult;
             }
 
-            bool binding = CheckForBinding(index, ref gameState, out tempResult);
-            if (binding && this is Knight)
+            bool binding = CheckForBinding(index, ref gameState, out bindingMoves);
+            if (binding)
             {
-                tempResult.Clear();
+                if (this is Knight)
+                {
+                    bindingMoves.Clear();
+                }
+                else
+                {
+                    generalMoves = GenerelFindMoves(index, gameState);
+                    foreach (var res in generalMoves)
+                    {
+                        if (bindingMoves.Any(x => x.toIndex == res.toIndex))
+                        {
+                            tempResult.Add(res);
+                        }
+                    }
+                }
             }
             else
             {
-                tempResult.Clear();
                 tempResult = GenerelFindMoves(index, gameState);
             }
 
@@ -274,8 +291,8 @@ namespace G12_ChessApplication.Src.chess_game.util
                     return false;
                 }
 
-                rowStep = rowDiff > 0 ? -1 : 1;
-                colStep = colDiff > 0 ? -1 : 1;
+                rowStep *= -1;
+                colStep *= -1;
 
                 return LoopSteps(index, gameState, ref row, ref col, colStep, rowStep, false, ref moves);
             }

@@ -35,8 +35,8 @@ namespace G12_ChessApplication.Src.chess_game
             {
                 turnToMove = false;
             }
-            SetUpSocket();
             Online = true;
+            SetUpSocket();
         }
 
         private void SetUpSocket()

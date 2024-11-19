@@ -182,6 +182,7 @@ namespace G12_ChessApplication.Src.chess_game.util
             string colorLetter = (ChessColor == ChessColor.WHITE) ? "w" : "b";
             uri = "pack://application:,,,/Images/" + colorLetter + "_bishop_2x_ns.png";
 
+            pieceCharacter = "B";
             directions = new List<Direction> { new Direction(-1, -1), new Direction(-1, 1), new Direction(1, 1), new Direction(1, -1) };
         }
         public Bishop(Bishop b) : base(b) { }
@@ -205,6 +206,7 @@ namespace G12_ChessApplication.Src.chess_game.util
             string colorLetter = (ChessColor == ChessColor.WHITE) ? "w" : "b";
             uri = "pack://application:,,,/Images/" + colorLetter + "_knight_2x_ns.png";
 
+            pieceCharacter = "N";
             directions = new List<Direction> { new Direction(1, 2), new Direction(1, -2), new Direction(-1, 2), new Direction(-1, -2),
                                                      new Direction(2, 1), new Direction(2, -1), new Direction(-2, 1), new Direction(-2, -1)
             };
@@ -246,6 +248,7 @@ namespace G12_ChessApplication.Src.chess_game.util
             string colorLetter = (ChessColor == ChessColor.WHITE) ? "w" : "b";
             uri = "pack://application:,,,/Images/" + colorLetter + "_rook_2x_ns.png";
 
+            pieceCharacter = "R";
             directions = new List<Direction> { new Direction(1, 0), new Direction(-1, 0), new Direction(0, 1), new Direction(0, -1) };
         }
         public Rook(Rook r) : base(r) { }
@@ -270,6 +273,7 @@ namespace G12_ChessApplication.Src.chess_game.util
             string colorLetter = (ChessColor == ChessColor.WHITE) ? "w" : "b";
             uri = "pack://application:,,,/Images/" + colorLetter + "_queen_2x_ns.png";
 
+            pieceCharacter = "Q";
             directions = new List<Direction> { new Direction(1, 0), new Direction(-1, 0), new Direction(0, 1), new Direction(0, -1),
                                                     new Direction(-1, -1), new Direction(-1, 1), new Direction(1, 1), new Direction(1, -1) 
             };
@@ -295,6 +299,7 @@ namespace G12_ChessApplication.Src.chess_game.util
             string colorLetter = (ChessColor == ChessColor.WHITE) ? "w" : "b";
             uri = "pack://application:,,,/Images/" + colorLetter + "_king_2x_ns.png";
 
+            pieceCharacter = "K";
             directions = new List<Direction> { new Direction(1, 0), new Direction(-1, 0), new Direction(0, 1), new Direction(0, -1),
                                                     new Direction(-1, -1), new Direction(-1, 1), new Direction(1, 1), new Direction(1, -1)
             };

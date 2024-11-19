@@ -10,6 +10,7 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="1*" />
             <ColumnDefinition Width="5*" />
+            <ColumnDefinition Width="2*" />
         </Grid.ColumnDefinitions>
         <StackPanel VerticalAlignment="Top">
             <Button x:Name="NextPuzzle" Content="Next Puzzle"/>
@@ -19,6 +20,12 @@
         </StackPanel>
         <Grid x:Name="GameGrid" Grid.Column="1">
         </Grid>
-
+        <DataGrid x:Name="GameHistory" AutoGenerateColumns="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="2">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Move #" Binding="{Binding MoveNumber}" Width="50"/>
+                <DataGridTextColumn Header="White" Binding="{Binding WhiteMove}" Width="*"/>
+                <DataGridTextColumn Header="Black" Binding="{Binding BlackMove}" Width="*"/>
+            </DataGrid.Columns>
+        </DataGrid>
     </Grid>
 </Window>

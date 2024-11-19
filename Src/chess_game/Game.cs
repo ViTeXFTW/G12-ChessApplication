@@ -163,7 +163,6 @@ namespace G12_ChessApplication.Src.chess_game
             {
                 move.capturedPiece = (ChessPiece)gameState[move.toIndex].Clone();
             }
-
             if (PlayerColor == gameState[move.fromIndex].ChessColor)
             {
                 if (OpponentMoves.Count > 0)
@@ -391,5 +390,12 @@ namespace G12_ChessApplication.Src.chess_game
         }
 
         public virtual void SendMsg(string msg) { }
+    }
+
+    public class MoveRecord
+    {
+        public int MoveNumber { get; set; } // E.g., 1, 2, 3
+        public string WhiteMove { get; set; } // E.g., "e4"
+        public string BlackMove { get; set; } // E.g., "e5"
     }
 }
