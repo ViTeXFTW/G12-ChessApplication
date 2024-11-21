@@ -400,7 +400,7 @@ namespace G12_ChessApplication.Src.chess_game
 
         public virtual void SendMsg(string msg) { }
 
-        public abstract void SetupChessBoard();
+        public abstract void Setup();
 
         public void AddMoveToHistory(Move move)
         {

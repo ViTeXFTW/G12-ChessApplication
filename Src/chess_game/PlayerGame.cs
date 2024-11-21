@@ -37,7 +37,6 @@ namespace G12_ChessApplication.Src.chess_game
                 turnToMove = false;
             }
             Online = true;
-            SetUpSocket();
         }
 
         private void SetUpSocket()
@@ -63,6 +62,10 @@ namespace G12_ChessApplication.Src.chess_game
                 _clientThread = new Thread(ReceiveMessages);
                 _clientThread.IsBackground = true;
                 _clientThread.Start();
+            }
+            catch (SocketException)
+            {
+                mainWindow.GoBackToMainMenu();
             }
             catch (Exception e)
             {
@@ -189,7 +192,7 @@ namespace G12_ChessApplication.Src.chess_game
                     case "Color":
                         PlayerColor = (ChessColor)Math.Abs(Convert.ToInt32(command[1]) - 1);
                         UserPlayer.SetColor(PlayerColor);
-                        SetupChessBoard();
+                        Setup();
                         break;
                     case "Turn":
                         turnToMove = command[1] == "False";
@@ -345,8 +348,9 @@ namespace G12_ChessApplication.Src.chess_game
             SendObject(_stream, msg);
         }
 
-        public override void SetupChessBoard()
+        public override void Setup()
         {
+            SetUpSocket();
             MainWindow.mainBoard.SetBoardSetup();
         }
     }

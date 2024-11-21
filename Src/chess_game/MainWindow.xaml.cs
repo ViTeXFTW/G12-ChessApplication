@@ -86,7 +86,7 @@ namespace G12_ChessApplication
                 square.MouseDown += OnBoardClick;
             }
             GameGrid.Children.Add(mainBoard);
-            game.SetupChessBoard();
+            game.Setup();
         }
 
         private void OnBoardClick(object sender, MouseButtonEventArgs e)
@@ -211,6 +211,11 @@ namespace G12_ChessApplication
         }
 
         private void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+            GoBackToMainMenu();
+        }
+
+        public void GoBackToMainMenu()
         {
             if (game is PlayerGame playerGame)
             {

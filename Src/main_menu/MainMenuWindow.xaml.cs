@@ -35,11 +35,11 @@ namespace G12_ChessApplication
         private void JoinGameBtn_Click(object sender, RoutedEventArgs e)
         {
             string code = CodeBox.Text;
-            code += "127.0.0.1";
             if(code == string.Empty)
             {
-                MessageBox.Show("Enter code to join");
-                return;
+                code += "127.0.0.1";
+                //MessageBox.Show("Enter code to join");
+                //return;
             }
             OptionSelected?.Invoke(this, new OptionSelectedEventArgs { SelectedOption = "JoinGame", Code = code });
         }

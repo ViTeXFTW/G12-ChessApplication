@@ -74,7 +74,7 @@ namespace G12_ChessApplication.Src.chess_game
             IsPuzzleDone();
         }
 
-        public override void SetupChessBoard()
+        public override void Setup()
         {
             MainWindow.mainBoard.SetBoardSetup(CurrentPuzzle.board);
         }

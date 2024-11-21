@@ -33,7 +33,7 @@ namespace G12_ChessApplication.Src.chess_game
             }
         }
 
-        public override void SetupChessBoard()
+        public override void Setup()
         {
             MainWindow.mainBoard.SetBoardSetup();
         }
