@@ -35,7 +35,6 @@ namespace G12_ChessApplication.Src.chess_game.util
         public ChessBoard(string pieceLayout = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR")
         {
             DefualtBoard();
-            SetBoardSetup(pieceLayout);
         }
 
         private void DefualtBoard()
@@ -68,11 +67,11 @@ namespace G12_ChessApplication.Src.chess_game.util
             }
         }
 
-        public void SetBoardSetup(string layout)
+        public void SetBoardSetup(string layout = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR")
         {
             RemovePieces();
             BoardSetup = layout;
-            int color = MainWindow.PlayerColor == ChessColor.WHITE ? 1 : -1;
+            int color = Game.PlayerColor == ChessColor.WHITE ? 1 : -1;
 
             int squareIndex = (color == 1) ? 0 : 63;
             foreach (char item in layout)
@@ -90,8 +89,6 @@ namespace G12_ChessApplication.Src.chess_game.util
                     ChessPieceUI pieceImage = new ChessPieceUI(newPiece.uri);
                     //pieceImage.HorizontalAlignment = HorizontalAlignment.Center;
                     //pieceImage.VerticalAlignment = VerticalAlignment.Center;
-                    pieceImage.Height = square.Height * 0.9;
-                    pieceImage.Width = square.Width * 0.9;
                     square.Children.Add(pieceImage);
                     squareIndex += 1 * color;
                 }
@@ -108,13 +105,7 @@ namespace G12_ChessApplication.Src.chess_game.util
         {
             foreach (ChessSquareUI square in Children)
             {
-                for (int i = square.Children.Count - 1; i >= 0; i--)
-                {
-                    if (square.Children[i] is Viewbox)
-                    {
-                        square.Children.Remove(square.Children[i]);
-                    }
-                }
+                square.Children.Clear();
             }
         }
 

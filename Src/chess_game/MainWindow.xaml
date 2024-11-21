@@ -18,8 +18,8 @@
             <Button Content="Undo" Click="Button_Click"/>
             <Button Content="Go back" Click="Button_Click_1" />
         </StackPanel>
-        <Grid x:Name="GameGrid" Grid.Column="1">
-        </Grid>
+        <Grid x:Name="GameGrid" Grid.Column="1"/>
+        <Grid x:Name="PopupGrid" Grid.Column="1"/>
         <DataGrid x:Name="GameHistory" AutoGenerateColumns="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="2">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Move #" Binding="{Binding MoveNumber}" Width="50"/>

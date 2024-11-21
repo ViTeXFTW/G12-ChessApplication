@@ -27,30 +27,15 @@ namespace G12_ChessApplication.Src.chess_game
                 Move currentMove = prevLegalMoves.Find(item => item.toIndex == index);
 
                 ApplyMove(currentMove);
-                AddMoveToHistory(currentMove);
                 // Switch to the next player
                 UserPlayer.ChangePlayer();
                 HandleChecks();
             }
         }
 
-        public void AddMoveToHistory(Move move)
+        public override void SetupChessBoard()
         {
-            MoveRecord m = new MoveRecord();
-            if (move.movingPiece.ChessColor == ChessColor.BLACK)
-            {
-                m = (MoveRecord)mainWindow.GameHistory.Items.GetItemAt(mainWindow.GameHistory.Items.Count - 1);
-                mainWindow.GameHistory.Items.Remove(m);
-                m.BlackMove = move.GetMoveString();
-                mainWindow.GameHistory.Items.Add(m);
-
-            }
-            else
-            {
-                m.MoveNumber = mainWindow.GameHistory.Items.Count + 1;
-                m.WhiteMove = move.GetMoveString();
-                mainWindow.GameHistory.Items.Add(m);
-            }
+            MainWindow.mainBoard.SetBoardSetup();
         }
     }
 }

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http.Json;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,13 +13,12 @@ namespace G12_ChessApplication.Src.chess_game
         public List<ChessPuzzle> Puzzles { get; set; } = new List<ChessPuzzle>();
 
         public ChessPuzzle CurrentPuzzle { get; set; }
-        private int FromSquareIndex { get; set; } = -1;
-        private int ToSquareIndex { get; set; } = -1;
         public bool puzzleIsActive { get; set; } = true;
-        public PuzzleGame(MainWindow main, ChessColor chessColor) : base(main, chessColor)
+        public PuzzleGame(MainWindow main) : base(main, ChessColor.WHITE)
         {
             ChessPuzzle chessPuzzle = new ChessPuzzle();
             chessPuzzle.board = "4r1rk/5K1b/7R/R7/8/8/8/8";
+            chessPuzzle.color = ChessColor.WHITE;
             chessPuzzle.enemyMoves.Add(new Move(7, 15));
             chessPuzzle.playerMoves.Add(new Move(23, 15));
             chessPuzzle.playerMoves.Add(new Move(24, 31));
@@ -27,43 +27,10 @@ namespace G12_ChessApplication.Src.chess_game
 
             CurrentPuzzle = new ChessPuzzle(chessPuzzle);
 
+            Game.PlayerColor = CurrentPuzzle.color;
+            Game.UserPlayer = new Player("User", CurrentPuzzle.color);
+
             gameState = FenParser.CreatePieceArray(CurrentPuzzle.board);
-
-            MainWindow.mainBoard.SetBoardSetup(CurrentPuzzle.board);
-        }
-
-        public override void SquareClicked(int index)
-        {
-            if (puzzleIsActive == false)
-                { return; }
-
-            if (FromSquareIndex == -1)
-            {
-                FromSquareIndex = index;
-                mainWindow.HighlightSquare(index);
-                return;
-            }
-
-            if (CurrentPuzzle.playerMoves.First().fromIndex == FromSquareIndex && CurrentPuzzle.playerMoves.First().toIndex == index)
-            {
-                ApplyMove(CurrentPuzzle.playerMoves.First());
-                mainWindow.UpdateUIAfterMove();
-                CurrentPuzzle.playerMoves.RemoveAt(0);
-
-                if (CurrentPuzzle.enemyMoves.Count > 0)
-                {
-                    UserPlayer.ChangePlayer();
-                    ApplyMove(CurrentPuzzle.enemyMoves.First());
-                    mainWindow.UpdateUIAfterMove();
-                    CurrentPuzzle.enemyMoves.RemoveAt(0);
-                }
-                UserPlayer.ChangePlayer();
-            }
-
-            mainWindow.ResetSquareColor(FromSquareIndex);
-            FromSquareIndex = -1;
-
-            IsPuzzleDone();
         }
 
         private void IsPuzzleDone()
@@ -83,12 +50,33 @@ namespace G12_ChessApplication.Src.chess_game
         {
             CurrentPuzzle = new ChessPuzzle(Puzzles.First());
             puzzleIsActive = true;
-
         }
 
         public override void HandleClick(int index)
         {
-            throw new NotImplementedException();
+            if (puzzleIsActive == false)
+            { return; }
+
+            if (CurrentPuzzle.playerMoves.First().fromIndex == selectedSquareIndex && CurrentPuzzle.playerMoves.First().toIndex == index)
+            {
+                ApplyMove(CurrentPuzzle.playerMoves.First());
+                CurrentPuzzle.playerMoves.RemoveAt(0);
+
+                if (CurrentPuzzle.enemyMoves.Count > 0)
+                {
+                    UserPlayer.ChangePlayer();
+                    ApplyMove(CurrentPuzzle.enemyMoves.First());
+                    CurrentPuzzle.enemyMoves.RemoveAt(0);
+                }
+                UserPlayer.ChangePlayer();
+            }
+
+            IsPuzzleDone();
+        }
+
+        public override void SetupChessBoard()
+        {
+            MainWindow.mainBoard.SetBoardSetup(CurrentPuzzle.board);
         }
     }
 }

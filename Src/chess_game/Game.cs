@@ -8,6 +8,7 @@ using System.Numerics;
 using System.Printing;
 using System.Reflection;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -66,7 +67,6 @@ namespace G12_ChessApplication.Src.chess_game
                     List<Move> legalMoves;
                     Move lastMove = OpponentMoves.Count > 0 ? OpponentMoves.Last() : null;
                     legalMoves = gameState[index].FindLegalMoves(index, ref gameState, lastMove);
-
 
                     mainWindow.ShowLegalMoves(legalMoves);
                     prevLegalMoves = legalMoves;
@@ -128,14 +128,19 @@ namespace G12_ChessApplication.Src.chess_game
             IsPieceSelected = false;
         }
 
-        public void ApplyMove(Move move)
+        public async Task ApplyMove(Move move)
         {
             move.movingPiece = (ChessPiece)gameState[move.fromIndex].Clone();
             if (gameState[move.fromIndex] is Pawn p)
             {
-                if (p.distance == 2)
+                if (move is PromotionMove pm)
                 {
-                    p.distance = 1;
+                    if (turnToMove)
+                    {
+                        ChessPiece promotePiece = await mainWindow.PromotionPopupFunc(move);
+                        pm.piecePromotedTo = promotePiece;
+                    }
+                    gameState[move.fromIndex] = pm.piecePromotedTo;
                 }
             }
 
@@ -156,14 +161,17 @@ namespace G12_ChessApplication.Src.chess_game
             {
                 enPassantMove.enPassantPiece = (ChessPiece)gameState[enPassantMove.capturedIndex].Clone();
                 gameState[enPassantMove.capturedIndex] = null;
-
             }
 
             if (move.isACapture || gameState[move.toIndex] != null)
             {
                 move.capturedPiece = (ChessPiece)gameState[move.toIndex].Clone();
             }
-            if (PlayerColor == gameState[move.fromIndex].ChessColor)
+
+
+            AddMoveToHistory(move);
+
+            if (Game.PlayerColor == gameState[move.fromIndex].ChessColor)
             {
                 if (OpponentMoves.Count > 0)
                 {
@@ -189,6 +197,7 @@ namespace G12_ChessApplication.Src.chess_game
         public void ApplyReverseMove(Move move)
         {
             mainWindow.UnHighLightMove(move);
+            RemoveMoveFromHistory(move);
             if (PlayerColor == move.movingPiece.ChessColor)
             {
                 PlayerMoves.Remove(move);
@@ -267,7 +276,7 @@ namespace G12_ChessApplication.Src.chess_game
         public static List<List<Move>> IsKingInCheck(ref ChessPiece[] gameState, int indexToCheck = -1)
         {
             List<List<Move>> checkIndexes = new List<List<Move>>();
-            int kingIndex = GetOwnKingIndex(ref gameState);
+            int kingIndex = GetKingIndex(ref gameState, Game.UserPlayer.Color);
             ChessPiece kingPiece = gameState[kingIndex];
             
             kingIndex = indexToCheck == -1 ? kingIndex : indexToCheck;
@@ -294,14 +303,14 @@ namespace G12_ChessApplication.Src.chess_game
 
         }
 
-        public static int GetOwnKingIndex(ref ChessPiece[] gameState)
+        public static int GetKingIndex(ref ChessPiece[] gameState, ChessColor kingColor)
         {
             int kingIndex = -1;
             for (int i = 0; i < gameState.Length; i++)
             {
                 if (gameState[i] is King king)
                 {
-                    if (king.ChessColor == Game.UserPlayer.Color)
+                    if (king.ChessColor == kingColor)
                     {
                         kingIndex = i;
                         break;
@@ -349,7 +358,7 @@ namespace G12_ChessApplication.Src.chess_game
 
             if (oneCheck || twoCheck)
             {
-                oldKingIndex = GetOwnKingIndex(ref gameState);
+                oldKingIndex = GetKingIndex(ref gameState, Game.UserPlayer.Color);
                 if (Online)
                 {
                     isCheckIndex = true;
@@ -390,12 +399,66 @@ namespace G12_ChessApplication.Src.chess_game
         }
 
         public virtual void SendMsg(string msg) { }
+
+        public abstract void SetupChessBoard();
+
+        public void AddMoveToHistory(Move move)
+        {
+            GameRecord m = new GameRecord();
+            if (move.movingPiece.ChessColor == ChessColor.BLACK && mainWindow.GameHistory.Items.Count > 0)
+            {
+                m = (GameRecord)mainWindow.GameHistory.Items.GetItemAt(mainWindow.GameHistory.Items.Count - 1);
+                mainWindow.GameHistory.Items.Remove(m);
+                m.BlackMove = move.GetMoveString();
+                mainWindow.GameHistory.Items.Add(m);
+
+            }
+            else
+            {
+                m.MoveNumber = mainWindow.GameHistory.Items.Count + 1;
+                m.WhiteMove = move.GetMoveString();
+                mainWindow.GameHistory.Items.Add(m);
+            }
+        }
+
+        private void RemoveMoveFromHistory(Move move)
+        {
+            GameRecord m = new GameRecord();
+            if (move.movingPiece.ChessColor == ChessColor.BLACK)
+            {
+                m = (GameRecord)mainWindow.GameHistory.Items.GetItemAt(mainWindow.GameHistory.Items.Count - 1);
+                mainWindow.GameHistory.Items.Remove(m);
+                m.BlackMove = string.Empty;
+                mainWindow.GameHistory.Items.Add(m);
+
+            }
+            else
+            {
+                mainWindow.GameHistory.Items.RemoveAt(mainWindow.GameHistory.Items.Count - 1);
+            }
+        }
+        public static string Reverse(string s)
+        {
+            char[] charArray = s.ToCharArray();
+            Array.Reverse(charArray);
+            return new string(charArray);
+        }
     }
 
-    public class MoveRecord
+    public class GameRecord
     {
         public int MoveNumber { get; set; } // E.g., 1, 2, 3
         public string WhiteMove { get; set; } // E.g., "e4"
         public string BlackMove { get; set; } // E.g., "e5"
+
+        [JsonConstructor]
+        public GameRecord() { }
+
+        public GameRecord(GameRecord moveRecord)
+        {
+            this.MoveNumber = moveRecord.MoveNumber;
+            this.WhiteMove = moveRecord.WhiteMove;
+            this.BlackMove = moveRecord.BlackMove;
+        }
     }
 }

@@ -43,6 +43,8 @@ namespace G12_ChessApplication.Src.chess_game.util
 
             bool check = CheckForBinding(index, ref gameState, out tempResult);
 
+            int promotionRow = Game.PlayerColor == Game.UserPlayer.Color ? 0 : 7;
+
             if (check)
             {
                 foreach (var move in tempResult)
@@ -51,7 +53,15 @@ namespace G12_ChessApplication.Src.chess_game.util
                     {
                         if (CanAttackPos(move.toIndex, move.fromIndex))
                         {
-                            result.Add(move);
+                            int curRow = move.toIndex / 8;
+                            if (curRow == promotionRow)
+                            {
+                                result.Add(new PromotionMove(move));
+                            }
+                            else
+                            {
+                                result.Add(move);
+                            }
                             break;
                         }
                     }
@@ -69,9 +79,11 @@ namespace G12_ChessApplication.Src.chess_game.util
             {
                 int row = fromRow + item.row; 
                 int col = fromCol + item.col;
-                
+
+                int startingRow = Game.UserPlayer.directionCo == 1 ? 1 : 6; 
+
                 // this.distance can be 2 if pawn hasnt moved, so can only be used if pawn is moving forward
-                int disCounter = (item.col == 0) ? this.distance : 1;
+                int disCounter = (item.col == 0 && startingRow == fromRow) ? this.distance : 1;
 
                 while (row >= 0 && row <= 7 && col >= 0 && col <= 7 && disCounter > 0)
                 {
@@ -81,13 +93,27 @@ namespace G12_ChessApplication.Src.chess_game.util
                         // Can attack if piece is opponents and its diagonal
                         if (this.ChessColor != gameState[newIndex].ChessColor && item.col != 0)
                         {
-                            tempResult.Add(new Move(index, newIndex, true));
+                            if (row == promotionRow)
+                            {
+                                tempResult.Add(new PromotionMove(index, newIndex, true));
+                            }
+                            else
+                            {
+                                tempResult.Add(new Move(index, newIndex, true));
+                            }
                         }
                         break;
                     }
                     if (item.col == 0)
                     {
-                        tempResult.Add(new Move(index, newIndex));
+                        if (row == promotionRow)
+                        {
+                            tempResult.Add(new PromotionMove(index, newIndex));
+                        }
+                        else
+                        {
+                            tempResult.Add(new Move(index, newIndex));
+                        }
                     }
 
                     disCounter--;
@@ -116,6 +142,16 @@ namespace G12_ChessApplication.Src.chess_game.util
                         }
                     }
                     newCol = fromCol + 1;
+                }
+            }
+
+            foreach (Move move in tempResult)
+            {
+                List<Move> moves;
+                int oppKingIndex = Game.GetKingIndex(ref gameState, Game.UserPlayer.Color == ChessColor.WHITE ? ChessColor.BLACK : ChessColor.WHITE);
+                if (CanTakePieceAt(move.toIndex, oppKingIndex, ref gameState, out moves))
+                {
+                    move.isACheck = true;
                 }
             }
 

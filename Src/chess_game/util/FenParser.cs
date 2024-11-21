@@ -11,7 +11,7 @@ namespace G12_ChessApplication.Src.chess_game.util
     public static class FenParser
     {
         public static ChessPiece[] CreatePieceArray(string fenString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR")
-        {
+        {   
             int colorFacing = Game.PlayerColor == ChessColor.WHITE ? 1 : -1;
             ChessPiece[] board = new ChessPiece[64];
 
@@ -117,10 +117,14 @@ namespace G12_ChessApplication.Src.chess_game.util
                         fenString += emptySpaces.ToString();
                         emptySpaces = 0;
                     }
-                    fenString += "/";
+                    if (counter != 63)
+                    {
+                        fenString += "/";
+                    }
                 }
                 counter++;
             }
+
             return fenString;
         }
         private static char GetCharFromPiece(ChessPiece piece)

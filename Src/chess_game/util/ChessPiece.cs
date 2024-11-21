@@ -182,6 +182,16 @@ namespace G12_ChessApplication.Src.chess_game.util
                 tempResult = GenerelFindMoves(index, gameState);
             }
 
+            foreach (Move move in tempResult)
+            {
+                List<Move> moves;
+                int oppKingIndex = Game.GetKingIndex(ref gameState, Game.UserPlayer.Color == ChessColor.WHITE ? ChessColor.BLACK : ChessColor.WHITE);
+                if (CanTakePieceAt(move.toIndex, oppKingIndex, ref gameState, out moves))
+                {
+                    move.isACheck = true;
+                }
+            }
+
             if (Game.oneCheck)
             {
                 foreach (Move move in tempResult)
@@ -239,7 +249,7 @@ namespace G12_ChessApplication.Src.chess_game.util
         {
             moves = new List<Move>();
             // Search for own king
-            int kingIndex = Game.GetOwnKingIndex(ref gameState);
+            int kingIndex = Game.GetKingIndex(ref gameState, Game.UserPlayer.Color);
 
             // Check for diagonal or horizontal or vetical connection to the king
             int kingRow = (kingIndex / 8);
@@ -308,7 +318,7 @@ namespace G12_ChessApplication.Src.chess_game.util
                 int intermediateIndex = intermediateRow * 8 + intermediateCol;
                 if (gameState[intermediateIndex] != null)
                 {
-                    if (gameState[intermediateIndex] is King && gameState[intermediateIndex].ChessColor != gameState[startIndex].ChessColor)
+                    if (gameState[intermediateIndex] is King && gameState[intermediateIndex].ChessColor == Game.UserPlayer.Color)
                     {
                         return false;
                     }

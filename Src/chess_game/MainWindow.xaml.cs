@@ -3,9 +3,12 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Numerics;
 using System.Reflection;
+using System.Reflection.Emit;
+using System.Security.Cryptography;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -15,6 +18,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using G12_ChessApplication.Src.chess_game;
 using G12_ChessApplication.Src.chess_game.util;
+using Color = System.Windows.Media.Color;
 
 namespace G12_ChessApplication
 {
@@ -27,7 +31,6 @@ namespace G12_ChessApplication
         public static ChessBoard mainBoard;
         public Game game;
         private string GameCode = string.Empty;
-        public static ChessColor PlayerColor = ChessColor.WHITE;
         public string GameType { get; }
         public static int boardHeight { get; set; } = 500;
         public static int boardWidth { get; set; } = 500;
@@ -36,6 +39,8 @@ namespace G12_ChessApplication
         public static SolidColorBrush DefaultLastMoveColor = Brushes.IndianRed;
         public static SolidColorBrush DefaultLegalMoveColor = Brushes.Gray;
         public static int DefaultLegalMoveRatio = 4;
+        public static int DefaultPopupHeightRatio = 2;
+        public static int DefaultPopupWidthRatio = 8;
 
 
         public MainWindow(string gameType, string code = "")
@@ -44,19 +49,11 @@ namespace G12_ChessApplication
             if (code != "")
             {
                 GameCode = code;
-                if (code != "Host")
-                {
-                    PlayerColor = ChessColor.BLACK;
-                }
-                else
-                {
-                    PlayerColor = ChessColor.WHITE;
-                }
             }
             GameType = gameType;
 
-            InitializeBoard();
             SetupGameType();
+            InitializeBoard();
         }
 
         private void SetupGameType()
@@ -64,10 +61,11 @@ namespace G12_ChessApplication
             switch(GameType)
             {
                 case "play":
-                    game = new PlayerGame(this, GameCode, PlayerColor);
+                    ChessColor color = (ChessColor)RandomNumberGenerator.GetInt32(0, 2);
+                    game = new PlayerGame(this, GameCode, color);
                     break;
                 case "puzzles":
-                    game = new PuzzleGame(this, PlayerColor);
+                    game = new PuzzleGame(this);
                     break;
                 case "Analysis":
                     game = new AnalysisGame(this);
@@ -77,7 +75,7 @@ namespace G12_ChessApplication
             }
         }
 
-        private void InitializeBoard(string board = "")
+        private void InitializeBoard()
         {
             
             mainBoard = new ChessBoard();
@@ -88,6 +86,7 @@ namespace G12_ChessApplication
                 square.MouseDown += OnBoardClick;
             }
             GameGrid.Children.Add(mainBoard);
+            game.SetupChessBoard();
         }
 
         private void OnBoardClick(object sender, MouseButtonEventArgs e)
@@ -130,6 +129,11 @@ namespace G12_ChessApplication
         {
             for (int i = 0; i < mainBoard.Children.Count; i++)
             {
+                if (mainBoard.Children[i] is not ChessSquareUI)
+                {
+                    continue;
+                }
+
                 bool pieceFound = false;
                 ChessSquareUI square = (ChessSquareUI)mainBoard.Children[i];
                 for (int j = 0; j < square.Children.Count; j++)
@@ -199,7 +203,11 @@ namespace G12_ChessApplication
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             Trace.WriteLine(FenParser.GetFenStringFromArray(game.gameState));
-            game.UndoMove();
+
+            if (game is not PlayerGame)
+            {
+                game.UndoMove();
+            }
         }
 
         private void Button_Click_1(object sender, RoutedEventArgs e)
@@ -221,6 +229,20 @@ namespace G12_ChessApplication
         {
             ResetSquareColor(move.fromIndex);
             ResetSquareColor(move.toIndex);
+        }
+
+        public async Task<ChessPiece> PromotionPopupFunc(Move move)
+        {
+            PromotionPopup popup = new PromotionPopup(move.movingPiece.ChessColor, move.toIndex);
+
+
+            PopupGrid.Children.Add(popup);
+
+            ChessPiece selectedPiece = await popup.GetSelectedPieceAsync();
+
+            PopupGrid.Children.Remove(popup);
+
+            return selectedPiece;
         }
     }
 }

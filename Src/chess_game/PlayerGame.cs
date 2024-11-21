@@ -9,6 +9,7 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
@@ -55,7 +56,7 @@ namespace G12_ChessApplication.Src.chess_game
         {
             try
             {
-                _client = new TcpClient("127.0.0.1", 12345);
+                _client = new TcpClient(_code, 12345);
                 _stream = _client.GetStream();
                 Trace.WriteLine("Connected to server");
 
@@ -120,9 +121,26 @@ namespace G12_ChessApplication.Src.chess_game
             {
                 TcpClient client = _server.AcceptTcpClient();
                 _stream = client.GetStream();
+                SendObject(_stream, "Color " + (int) PlayerColor );
+                SendObject(_stream, "Turn " + turnToMove );
+                string board = FenParser.GetFenStringFromArray(gameState);
+                if (PlayerColor != ChessColor.WHITE)
+                {
+                    board = Reverse(board);
+                }
+                SendObject(_stream, "Board " + board);
+                SendGameHistrory(_stream);
                 _clientThread = new Thread(ReceiveMessages);
                 _clientThread.IsBackground = true;
                 _clientThread.Start();
+            }
+        }
+
+        private void SendGameHistrory(NetworkStream stream)
+        {
+            foreach (GameRecord entry in mainWindow.GameHistory.Items)
+            {
+                SendObject(stream, entry);
             }
         }
 
@@ -134,13 +152,17 @@ namespace G12_ChessApplication.Src.chess_game
                     if (obj is Move move)
                     {
                         ApplyMove(move);
+                        turnToMove = true;
+                    }
+                    else if (obj is GameRecord moveRecord)
+                    {
+                        mainWindow.GameHistory.Items.Add(moveRecord);
                     }
                     else if (obj is String s)
                     {
                         HandleStringMsg(s);
                     }
                 }));
-            turnToMove = true;
         }
 
         private void HandleStringMsg(string s)
@@ -152,7 +174,7 @@ namespace G12_ChessApplication.Src.chess_game
                 {
                     case "Check":
                         mainWindow.HighlightSquare(ConvertIndex(Convert.ToInt32(command[1])), MainWindow.DefaultCheckColor);
-                            break;
+                        break;
                     case "UnCheck":
                         mainWindow.ResetCheckColor(ConvertIndex(Convert.ToInt32(command[1])));
                         break;
@@ -163,6 +185,19 @@ namespace G12_ChessApplication.Src.chess_game
                     case "StaleMate":
                         staleMate = true;
                         MessageBox.Show("StaleMate dumbass!");
+                        break;
+                    case "Color":
+                        PlayerColor = (ChessColor)Math.Abs(Convert.ToInt32(command[1]) - 1);
+                        UserPlayer.SetColor(PlayerColor);
+                        SetupChessBoard();
+                        break;
+                    case "Turn":
+                        turnToMove = command[1] == "False";
+                        break;
+                    case "Board":
+                        string board = command[1];
+                        gameState = FenParser.CreatePieceArray(board);
+                        MainWindow.mainBoard.SetBoardSetup(board);
                         break;
                     default:
                         break;
@@ -190,6 +225,7 @@ namespace G12_ChessApplication.Src.chess_game
 
             // Send the serialized JSON object
             stream.Write(jsonBytes, 0, jsonBytes.Length);
+            stream.Flush();
         }
         public Object ReceiveObject(NetworkStream stream)
         {
@@ -208,9 +244,17 @@ namespace G12_ChessApplication.Src.chess_game
             // Deserialize JSON string to object
             try
             {
-                Move move = JsonSerializer.Deserialize<Move>(jsonString);
-                move.InvertMove();
-                return move;
+                if (jsonString.Contains("\"fromIndex\""))
+                {
+                    Move move = JsonSerializer.Deserialize<Move>(jsonString);
+                    move.InvertMove();
+                    return move;
+                }
+                else
+                {
+                    GameRecord moveRecord = JsonSerializer.Deserialize<GameRecord>(jsonString);
+                    return moveRecord;
+                }
             }
             catch (JsonException)
             {
@@ -241,10 +285,12 @@ namespace G12_ChessApplication.Src.chess_game
             if (_server != null)
             {
                 _server.Stop();
+                _server.Dispose();
             }
             if (_client != null)
             {
                 _client.Close();
+                _client.Dispose();
             }
             if (_stream != null)
             {
@@ -253,7 +299,7 @@ namespace G12_ChessApplication.Src.chess_game
 
         }
 
-        public override void HandleClick(int index)
+        public override async void HandleClick(int index)
         {
             if (_stream == null)
             {
@@ -279,16 +325,16 @@ namespace G12_ChessApplication.Src.chess_game
 
 
                     Move currentMove = prevLegalMoves.Find(item => item.toIndex == index);
-                    ApplyMove(currentMove);
+                    await ApplyMove(currentMove);
                     currentMove = PlayerMoves.Last();
+                    turnToMove = false;
                     SendObject(_stream, currentMove);
                     //SendMove(_stream, currentMove);
-
-                    turnToMove = false;
                 }
                 catch (Exception e)
                 {
                     _stream = null;
+
                 }
                 selectedSquareIndex = null;
             }
@@ -297,6 +343,11 @@ namespace G12_ChessApplication.Src.chess_game
         public override void SendMsg(string msg)
         {
             SendObject(_stream, msg);
+        }
+
+        public override void SetupChessBoard()
+        {
+            MainWindow.mainBoard.SetBoardSetup();
         }
     }
 }

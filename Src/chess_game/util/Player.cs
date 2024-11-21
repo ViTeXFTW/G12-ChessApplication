@@ -26,5 +26,10 @@ namespace G12_ChessApplication.Src.chess_game.util
             Color = Color == ChessColor.WHITE ? ChessColor.BLACK : ChessColor.WHITE;
             Trace.WriteLine($"Changed player to {Color}");
         }
+
+        public void SetColor(ChessColor color)
+        {
+            this.Color = color;
+        }
     }
 }

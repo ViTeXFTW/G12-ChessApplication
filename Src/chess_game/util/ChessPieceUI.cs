@@ -12,8 +12,10 @@ namespace G12_ChessApplication.Src.chess_game.util
 {
     public class ChessPieceUI : Border
     {
+        public string uri { get; set; }
         public ChessPieceUI(string uri)
         {
+            this.uri = uri;
             Image piece = new Image();
             BitmapImage image = new BitmapImage();
             image.BeginInit();
