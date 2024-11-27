@@ -9,14 +9,15 @@ namespace G12_ChessApplication
     {
         private string userName = "";
         private string passWord = "";
+        
+        public event EventHandler LoginSuccess;
 
         // In-memory user list for simplicity. Later, you can replace this with a DB.
-        private SQLConnector.User currentUser;
+        public SQLConnector.User currentUser { get; set; }
 
         // Database context
         private SQLConnector dbConnector;
 
-        
         public LoginScreen()
         {
             InitializeComponent();
@@ -68,7 +69,7 @@ namespace G12_ChessApplication
             {
                 Console.WriteLine("Login successful");
                 Console.WriteLine($"Logged in as: {currentUser.Username}");
-                // Handle admin vs. user logic
+                LoginSuccess?.Invoke(this, EventArgs.Empty);
             }
             else
             {

@@ -10,6 +10,9 @@ namespace G12_ChessApplication
     /// </summary>
     public partial class App : Application
     {
+        // Add currentUser field at class level
+        private SQLConnector.User currentUser;
+
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
@@ -20,18 +23,19 @@ namespace G12_ChessApplication
 
         private void init_login()
         {
-            var loginWindow = new LoginWindow();
+            var loginScreen = new LoginScreen();
             // Subscribe to the login success event
-            loginWindow.LoginSuccess += OnLoginSuccess;
-            loginWindow.Show();
+            loginScreen.LoginSuccess += OnLoginSuccess;
+            loginScreen.Show();
         }
 
         private void OnLoginSuccess(object sender, EventArgs e)
         {
-            // Close the login window
-            if (sender is Window loginWindow)
+            // Get the user info from the login window
+            if (sender is LoginScreen loginScreen)
             {
-                loginWindow.Hide();
+                currentUser = loginScreen.currentUser;
+                loginScreen.Hide();
             }
 
             // Show the main menu window
@@ -46,10 +50,10 @@ namespace G12_ChessApplication
 
         private void init_mainmenu()
         {
-
             try
             {
-                var mainMenuWindow = new MainMenuWindow();
+                // Get the username from the current user
+                var mainMenuWindow = new MainMenuWindow(currentUser.Username);
                 mainMenuWindow.OptionSelected += OnOptionSelected;
                 mainMenuWindow.Show();
             }

@@ -79,6 +79,8 @@ namespace G12_ChessApplication
             }
         }
 
+       
+
         private void InitializeBoard()
         {
             mainBoard = new ChessBoard();

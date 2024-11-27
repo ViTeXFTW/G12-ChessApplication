@@ -43,32 +43,41 @@ namespace G12_ChessApplication
     public partial class Leaderboard : Window
     {
         private SQLConnector dbConnector;
-        public Leaderboard()
+        private string username;
+        public Leaderboard(string username)
         {
             InitializeComponent();
             dbConnector = new SQLConnector();
+            this.username = username;
             LoadLeaderboard();
         }
 
-        private async void Button_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                await dbConnector.AddOrUpdateMatchResult("Magnus69", "makki12", 1);
-                LoadLeaderboard();
-            }
-            catch (Exception ex) 
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
+        //private async void Button_Click(object sender, RoutedEventArgs e)
+        //{
+        //    try
+        //    {
+        //        await dbConnector.AddOrUpdateMatchResult("Magnus69", "makki12", 1);
+        //        LoadLeaderboard();
+        //    }
+        //    catch (Exception ex) 
+        //    {
+        //        MessageBox.Show(ex.Message);
+        //    }
+        //}
         
         private async void LoadLeaderboard()
         {
             var leaderboardEntries = await dbConnector.GetLeaderboard();
-            var matchhistory = await dbConnector.GetMatchHistory("Magnus69");
+            var matchhistory = await dbConnector.GetMatchHistory(username);
             LeaderBoardGrid.ItemsSource = leaderboardEntries;
             MatchHistoryGrid.ItemsSource = matchhistory;
+        }
+
+        private void BackBtn_Click(object sender, RoutedEventArgs e)
+        {
+            MainMenuWindow mainMenu = new MainMenuWindow(username);
+            mainMenu.Show();
+            this.Close();
         }
     }
 }
