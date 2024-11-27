@@ -5,6 +5,27 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:G12_ChessApplication"
         mc:Ignorable="d"
-        Title="MainWindow" Height="800" Width="800">
-    <Grid x:Name="Game"/>
+        Title="MainWindow" Height="700" Width="1000">
+    <Grid x:Name="GameGrid">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1*" />
+            <ColumnDefinition Width="5*" />
+            <ColumnDefinition Width="2*" />
+        </Grid.ColumnDefinitions>
+        <StackPanel VerticalAlignment="Top">
+            <Button x:Name="NextPuzzle" Content="Next Puzzle"/>
+            <Button x:Name="RepeatPuzzle" Content="Repeat Puzzle" Click="RepeatPuzzle_Click"/>
+            <Button Content="Undo" Click="Button_Click"/>
+            <Button Content="Go back" Click="Button_Click_1" />
+        </StackPanel>
+        <Grid x:Name="BoardGrid" Grid.Column="1"/>
+        <Grid x:Name="PopupGrid" Grid.Column="1"/>
+        <DataGrid x:Name="GameHistory" AutoGenerateColumns="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="2">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Move #" Binding="{Binding MoveNumber}" Width="50"/>
+                <DataGridTextColumn Header="White" Binding="{Binding WhiteMove}" Width="*"/>
+                <DataGridTextColumn Header="Black" Binding="{Binding BlackMove}" Width="*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
 </Window>

@@ -7,10 +7,12 @@ using System.Windows.Controls;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using System.Windows.Media.Imaging;
+using System.Diagnostics;
 
 namespace G12_ChessApplication.Src.chess_game.util
 {
-    internal class ChessBoard : Grid
+    public class ChessBoard : Grid
     {
         Dictionary<char, Func<ChessPiece>> charToPieceConverter = new Dictionary<char, Func<ChessPiece>>
         {
@@ -28,81 +30,99 @@ namespace G12_ChessApplication.Src.chess_game.util
             {'P', () => new Pawn(ChessColor.WHITE)}    // White pawn
         };
 
-        string defualtBoard = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
-        string ranPos = "r1bk3r/p2pBpNp/n4n2/1p1NP2P/6P1/3P4/P1P1K3/q5b1";
-        public ChessBoard(double height = 640, double width = 640)
-        {
-            Height = height;
-            Width = width;
+        string BoardSetup = "r1bk3r/p2pBpNp/n4n2/1p1NP2P/6P1/3P4/P1P1K3/q5b1";
 
+        public ChessBoard(string pieceLayout = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR")
+        {
             DefualtBoard();
-            BoardSetup(defualtBoard);
         }
 
         private void DefualtBoard()
         {
-            double squareHeight = Height / 8;
-            double squareWidth = Width / 8;
+            this.Children.Clear();
+            this.RowDefinitions.Clear();
+            this.ColumnDefinitions.Clear();
 
-            int col = 0;
-            int row = 0;
+            for (int i = 0; i < 8; i++)
+            {
+                this.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                this.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+            }
+
             int switchColor = 0;
-
             SolidColorBrush green = new SolidColorBrush(Colors.DarkGreen);
             SolidColorBrush beige = new SolidColorBrush(Colors.Beige);
 
-            for (int i = 0; i < 64; i++)
+            for (int row = 0; row < 8; row++)
             {
-                Grid square = new Grid();
-                square.Height = squareHeight;
-                square.Width = squareWidth;
-                square.VerticalAlignment = VerticalAlignment.Top;
-                square.HorizontalAlignment = HorizontalAlignment.Left;
-                square.Margin = new Thickness(col * squareWidth, row * squareHeight, 0, 0);
-
-                Rectangle squareColor = new Rectangle();
-                squareColor.Fill = (switchColor + i) % 2 == 0 ? beige : green;
-                squareColor.Stroke = new SolidColorBrush(Colors.Cyan);
-                squareColor.StrokeThickness = 0;
-                square.Children.Add(squareColor);
-
-                col++;
-                if (i % 8 == 7)
+                for (int col = 0; col < 8; col++)
                 {
-                    col = 0;
-                    row++;
-                    switchColor = switchColor == 0 ? 1 : 0;
+                    ChessSquareUI square = new ChessSquareUI((switchColor % 2 == 0) ? beige : green);
+                    switchColor++;
+                    ChessSquareUI.SetRow(square, row);
+                    ChessSquareUI.SetColumn(square, col);
+                    this.Children.Add(square);
                 }
-
-                Children.Add(square);
+                switchColor++;
             }
         }
 
-        private void BoardSetup(string layout)
+        public void SetBoardSetup(string layout = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR")
         {
-            double chessPieceHeight = Height / 8 * 0.9;
-            double chessPieceWidth = Width / 8 * 0.9;
+            RemovePieces();
+            BoardSetup = layout;
+            int color = Game.PlayerColor == ChessColor.WHITE ? 1 : -1;
 
-            int squareIndex = 0;
+            int squareIndex = (color == 1) ? 0 : 63;
             foreach (char item in layout)
             {
                 if (char.IsDigit(item))
                 {
                     int emptySquares = Convert.ToInt32(item.ToString());
-                    squareIndex += emptySquares;
+                    squareIndex += emptySquares * color;
                 }
                 else if (charToPieceConverter.TryGetValue(item, out Func<ChessPiece> createPiece))
                 {
                     ChessPiece newPiece = createPiece();
-                    newPiece.Height = chessPieceHeight;
-                    newPiece.Width = chessPieceWidth;
-                    Grid square = Children[squareIndex] as Grid;
-                    square.Children.Add(newPiece);
+                    ChessSquareUI square = Children[squareIndex] as ChessSquareUI;
 
-                    squareIndex++;
+                    ChessPieceUI pieceImage = new ChessPieceUI(newPiece.uri);
+                    //pieceImage.HorizontalAlignment = HorizontalAlignment.Center;
+                    //pieceImage.VerticalAlignment = VerticalAlignment.Center;
+                    square.Children.Add(pieceImage);
+                    squareIndex += 1 * color;
                 }
-
             }
+        }
+
+        public void ResetBoard()
+        {
+            RemovePieces();
+            SetBoardSetup(BoardSetup);
+        }
+
+        private void RemovePieces()
+        {
+            foreach (ChessSquareUI square in Children)
+            {
+                square.Children.Clear();
+            }
+        }
+
+        protected override Size MeasureOverride(Size availableSize)
+        {
+            double size = Math.Min(availableSize.Width, availableSize.Height);
+            Size finalSize = new Size(size, size);
+            base.MeasureOverride(finalSize);
+            return finalSize;
+        }
+
+        protected override Size ArrangeOverride(Size finalSize)
+        {
+            double size = Math.Min(finalSize.Width, finalSize.Height);
+            Size squareSize = new Size(size, size);
+            base.ArrangeOverride(squareSize);
+            return squareSize;
         }
     }
 }

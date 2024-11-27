@@ -7,8 +7,12 @@
         mc:Ignorable="d"
         Title="MainMenuWindow" Height="450" Width="800">
     <Grid>
-        <Button x:Name="PlayChessBtn" Content="Play Chess" HorizontalAlignment="Left" Margin="359,89,0,0" VerticalAlignment="Top" Click="PlayChessBtn_Click"/>
-        <Button x:Name="PuzzlesBtn" Content="Puzzles" HorizontalAlignment="Left" Margin="369,152,0,0" VerticalAlignment="Top"/>
-
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Width="200">
+            <Button x:Name="PlayChessBtn" Content="Play Chess" Click="PlayChessBtn_Click"/>
+            <Button x:Name="JoinGameBtn" Content="Join Game" Margin="0 10,0,10" Click="JoinGameBtn_Click"/>
+            <TextBox x:Name="CodeBox" TextWrapping="Wrap" Text="" Margin="0,0,0,10"/>
+            <Button x:Name="AnalysisBtn" Content="Analysis Board" Margin="0,0,0,10" Click="AnalysisBtn_Click"/>
+            <Button x:Name="PuzzlesBtn" Content="Puzzles" Click="PuzzlesBtn_Click"/>
+        </StackPanel>
     </Grid>
 </Window>
