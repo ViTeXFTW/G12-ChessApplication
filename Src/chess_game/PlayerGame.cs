@@ -35,6 +35,8 @@ namespace G12_ChessApplication.Src.chess_game
         public PlayerGame(MainWindow main, string code, ChessColor chessColor, string userName) : base(main, chessColor)
         {
             _code = code;
+            userPlayerUsername = userName;
+            UserPlayer = new Player(userName, chessColor);
             if (chessColor == ChessColor.BLACK)
             {
                 turnToMove = false;
@@ -196,7 +198,14 @@ namespace G12_ChessApplication.Src.chess_game
                         break;
                     case "Color":
                         PlayerColor = (ChessColor)Math.Abs(Convert.ToInt32(command[1]) - 1);
-                        UserPlayer.SetColor(PlayerColor);
+                        if (UserPlayer == null)
+                        {
+                            UserPlayer = new Player(userPlayerUsername, PlayerColor);
+                        }
+                        else
+                        {
+                            UserPlayer.SetColor(PlayerColor);
+                        }
                         Setup();
                         break;
                     case "Turn":

@@ -272,12 +272,12 @@ namespace G12_ChessApplication.Src.chess_game
 
         }
 
-        public static List<List<Move>> IsKingInCheck(ref ChessPiece[] gameState, int indexToCheck = -1)
+        public static List<List<Move>> IsKingInCheck(ref ChessPiece[] gameState, ChessColor colorToCheck, int indexToCheck = -1)
         {
             List<List<Move>> checkIndexes = new List<List<Move>>();
-            int kingIndex = GetKingIndex(ref gameState, Game.UserPlayer.Color);
+            int kingIndex = GetKingIndex(ref gameState, colorToCheck);
             ChessPiece kingPiece = gameState[kingIndex];
-            
+
             kingIndex = indexToCheck == -1 ? kingIndex : indexToCheck;
 
             int kingRow = kingIndex / 8;
@@ -322,7 +322,7 @@ namespace G12_ChessApplication.Src.chess_game
 
         public async void HandleChecks()
         {
-            List<List<Move>> checks = IsKingInCheck(ref gameState);
+            List<List<Move>> checks = IsKingInCheck(ref gameState, turnToMove ? UserPlayer.Color : (UserPlayer.Color == ChessColor.WHITE ? ChessColor.BLACK : ChessColor.WHITE));
             Trace.WriteLine("Amount of checks: " + checks.Count);
             checkIndexes.Clear();
             oneCheck = checks.Count == 1;
