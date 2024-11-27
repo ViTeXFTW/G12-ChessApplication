@@ -31,10 +31,34 @@ namespace G12_ChessApplication
             OptionSelected?.Invoke(this, new OptionSelectedEventArgs { SelectedOption = "PlayChess" });
             //Close(); // Close main menu if needed
         }
+
+        private void JoinGameBtn_Click(object sender, RoutedEventArgs e)
+        {
+            string code = CodeBox.Text;
+            if(code == string.Empty)
+            {
+                code += "127.0.0.1";
+                //MessageBox.Show("Enter code to join");
+                //return;
+            }
+            OptionSelected?.Invoke(this, new OptionSelectedEventArgs { SelectedOption = "JoinGame", Code = code });
+        }
+
+        private void PuzzlesBtn_Click(object sender, RoutedEventArgs e)
+        {
+            OptionSelected?.Invoke(this, new OptionSelectedEventArgs { SelectedOption = "Puzzles" });
+        }
+
+        private void AnalysisBtn_Click(object sender, RoutedEventArgs e)
+        {
+            OptionSelected?.Invoke(this, new OptionSelectedEventArgs { SelectedOption = "Analysis" });
+        }
     }
 
     public class OptionSelectedEventArgs : EventArgs
     {
         public string SelectedOption { get; set; }
+        public string Code { get; set; }
+
     }
 }

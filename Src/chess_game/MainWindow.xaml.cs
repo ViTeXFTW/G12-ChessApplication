@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Drawing;
 using System.Numerics;
 using System.Reflection;
+using System.Reflection.Emit;
+using System.Security.Cryptography;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -14,6 +18,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using G12_ChessApplication.Src.chess_game;
 using G12_ChessApplication.Src.chess_game.util;
+using Color = System.Windows.Media.Color;
 
 namespace G12_ChessApplication
 {
@@ -22,138 +27,267 @@ namespace G12_ChessApplication
     /// </summary>
     public partial class MainWindow : Window
     {
-        private static Grid mainBoard = new ChessBoard();
-        private int? selectedSquareIndex = null;
-        private Game game;
-        public MainWindow()
+        public event EventHandler goBack;
+        public static ChessBoard mainBoard;
+        public Game game;
+        private string GameCode = string.Empty;
+        public string GameType { get; }
+        public static int boardHeight { get; set; } = 500;
+        public static int boardWidth { get; set; } = 500;
+
+        public bool promoting { get; set; } = false;
+
+        private TaskCompletionSource<ChessPiece> _taskCompletionSource;
+
+        public static SolidColorBrush DefaultCheckColor = Brushes.Cyan;
+        public static SolidColorBrush DefaultLastMoveColor = Brushes.IndianRed;
+        public static SolidColorBrush DefaultLegalMoveColor = Brushes.Gray;
+        public static int DefaultLegalMoveRatio = 4;
+        public static int DefaultPopupHeightRatio = 2;
+        public static int DefaultPopupWidthRatio = 8;
+
+
+        public MainWindow(string gameType, string code = "")
         {
             InitializeComponent();
+            if (code != "")
+            {
+                GameCode = code;
+            }
+            GameType = gameType;
 
+            SetupGameType();
             InitializeBoard();
+        }
 
-            game = new Game("Mark", "Kevin");
+        private void SetupGameType()
+        {
+            switch(GameType)
+            {
+                case "play":
+                    ChessColor color = (ChessColor)RandomNumberGenerator.GetInt32(0, 2);
+                    game = new PlayerGame(this, GameCode, color);
+                    break;
+                case "puzzles":
+                    game = new PuzzleGame(this);
+                    break;
+                case "Analysis":
+                    game = new AnalysisGame(this);
+                    break;
+                default:
+                    break;
+            }
         }
 
         private void InitializeBoard()
         {
-            mainBoard = new ChessBoard(500, 500);
-            mainBoard.VerticalAlignment = VerticalAlignment.Top;
-            mainBoard.HorizontalAlignment = HorizontalAlignment.Left;
-            Game.Children.Add(mainBoard);
-
-            foreach (Grid square in mainBoard.Children)
+            mainBoard = new ChessBoard();
+            //mainBoard.VerticalAlignment = VerticalAlignment.Top;
+            //mainBoard.HorizontalAlignment = HorizontalAlignment.Left;
+            foreach (ChessSquareUI square in mainBoard.Children)
             {
-                square.MouseDown += OnBoardClick;
+                square.MouseLeftButtonDown += OnBoardClick;
             }
+            BoardGrid.Children.Add(mainBoard);
+            game.Setup();
         }
-
 
         private void OnBoardClick(object sender, MouseButtonEventArgs e)
         {
-            Grid square = (Grid)sender;
+            if (promoting)
+            {
+                return;
+            }
+            ChessSquareUI square = (ChessSquareUI)sender;
             int index = mainBoard.Children.IndexOf(square);
-            if (index != -1 && game.currentPlayer == game.whitePlayer || game.currentPlayer == game.blackPlayer)
-            {
-                HandlePlayerMove(index);
-            }
+            game.SquareClicked(index);
         }
 
-        private void HandlePlayerMove(int index)
+        public void HighlightSquare(int index, SolidColorBrush color = null)
         {
-            if (game.IsPieceSelected)
+            if (color == null)
             {
-                if (game.IsValidMove(game.SelectedPieceIndex, index))
-                {
-                    // Apply the move
-                    game.ApplyMove(game.SelectedPieceIndex, index);
-                    UpdateUIAfterMove(game.SelectedPieceIndex, index);
-
-                    // Reset the color of the previously selected square
-                    ResetSquareColor(game.SelectedPieceIndex);
-                    selectedSquareIndex = null;
-
-                    // Switch to the next player
-                    game.currentPlayer = game.currentPlayer == game.whitePlayer ? game.blackPlayer : game.whitePlayer;
-                    Trace.WriteLine($"Changed player to {game.currentPlayer.Color}");
-                }
-                else
-                {
-
-                    // Invalid move, deselect the piece
-                    game.DeselectPiece();
-
-                    // Optionally update UI to reflect deselection
-
-                    ResetSquareColor(game.SelectedPieceIndex);
-                    selectedSquareIndex = null;
-                }
+                color = DefaultLastMoveColor;
             }
-            else
+            ChessSquareUI square = (ChessSquareUI)mainBoard.Children[index];
+            square.SetNewColor(color);
+        }
+
+        public void ResetSquareColor(int index)
+        {
+            ResetLegalMoveColor(index);
+            ResetCheckColor(index);
+            ChessSquareUI square = (ChessSquareUI)mainBoard.Children[index];
+            square.SetPrevColor();
+        }
+
+        public void ResetLegalMoveColor(int index)
+        {
+            ChessSquareUI square = (ChessSquareUI)mainBoard.Children[index];
+            square.RemoveLegalMoveColor();
+        }
+
+        public void ResetCheckColor(int index)
+        {
+            ChessSquareUI square = (ChessSquareUI)mainBoard.Children[index];
+            square.RemoveCheckColor();
+        }
+        public void UpdateUIAfterMove()
+        {
+            for (int i = 0; i < mainBoard.Children.Count; i++)
             {
-                if (game.CanSelectPieceAt(index))
+                if (mainBoard.Children[i] is not ChessSquareUI)
                 {
-                    // Deselect the previous selection if any
-                    if (selectedSquareIndex != null)
+                    continue;
+                }
+
+                bool pieceFound = false;
+                ChessSquareUI square = (ChessSquareUI)mainBoard.Children[i];
+                for (int j = 0; j < square.Children.Count; j++)
+                {
+                    if (square.Children[j] is ChessPieceUI)
                     {
-                        ResetSquareColor(selectedSquareIndex.Value);
+                        square.Children.RemoveAt(j);
+                        if (game.gameState[i] != null)
+                        {
+                            square.Children.Add(new ChessPieceUI(game.gameState[i].uri));
+                        }
+                        pieceFound = true;
+                        break;
                     }
-
-                    // Select the piece
-                    game.SelectPieceAt(index);
-
-                    // Highlight the selected square
-                    HighlightSquare(index);
-
-                    // Keep track of the selected square index
-                    selectedSquareIndex = index;
                 }
-            }
-        }
-
-        private void HighlightSquare(int index)
-        {
-            Grid square = (Grid)mainBoard.Children[index];
-            Rectangle squareColor = (Rectangle)square.Children[0];
-
-            squareColor.Fill = Brushes.IndianRed;
-        }
-
-        private void ResetSquareColor(int index)
-        {
-            Grid square = (Grid)mainBoard.Children[index];
-            Rectangle squareColor = (Rectangle)square.Children[0];
-
-            // Calculate the original color based on the square's position
-            int row = index / 8;
-            int col = index % 8;
-            bool isLightSquare = (row + col) % 2 == 0;
-
-            squareColor.Fill = isLightSquare ? Brushes.Beige : Brushes.DarkGreen;
-        }
-
-        private void UpdateUIAfterMove(int fromIndex, int toIndex)
-        {
-            Grid squareFrom = (Grid)mainBoard.Children[fromIndex];
-            Grid squareTo = (Grid)mainBoard.Children[toIndex];
-            ChessPiece pieceToMove = (ChessPiece)squareFrom.Children[1];
-            squareFrom.Children.Remove(pieceToMove);
-
-            for (int i = 0; i < squareTo.Children.Count; i++)
-            {
-                if (squareTo.Children[i] is ChessPiece)
+                if ( !pieceFound && game.gameState[i] != null)
                 {
-                    squareTo.Children.RemoveAt(i);
+                    square.Children.Add(new ChessPieceUI(game.gameState[i].uri));
                 }
             }
-            Rectangle squareColorFrom = (Rectangle)squareFrom.Children[0];
-            Rectangle squareColorTo = (Rectangle)squareTo.Children[0];
-
-            //squareColorFrom.StrokeThickness = (squareColorFrom.StrokeThickness == 0) ? 3 : 0;
-            //squareColorTo.StrokeThickness = (squareColorTo.StrokeThickness == 0) ? 3 : 0;
-
-            squareTo.Children.Add(pieceToMove);
-
         }
 
+        public void ShowLegalMoves(List<Move> legalMoves)
+        {
+            foreach (var item in legalMoves)
+            {
+                if (item.isACapture)
+                {
+                    HighlightSquare(item.toIndex, DefaultLegalMoveColor);
+                }
+                else if (mainBoard.Children[item.toIndex] is ChessSquareUI square)
+                {
+                    square.Children.Add(new LegalMoveUI());
+                }
+            }
+        }
+
+        public void RemoveLegalMoves(List<Move> legalMoves)
+        {
+            foreach (var item in legalMoves)
+            {
+                if (item.isACapture)
+                {
+                    ResetLegalMoveColor(item.toIndex);
+                }
+                if (mainBoard.Children[item.toIndex] is ChessSquareUI square)
+                {
+                    foreach (var child in square.Children)
+                    {
+                        if (child is LegalMoveUI ellipse)
+                        {
+                            square.Children.Remove(ellipse);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        private void RepeatPuzzle_Click(object sender, RoutedEventArgs e)
+        {
+            mainBoard.ResetBoard();
+            PuzzleGame puzzleGame = (PuzzleGame) game;
+            puzzleGame.RepeatPuzzle();
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            Trace.WriteLine(FenParser.GetFenStringFromArray(game.gameState));
+
+            if (game is not PlayerGame)
+            {
+                game.UndoMove();
+            }
+        }
+
+        private void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+            GoBackToMainMenu();
+        }
+
+        public void GoBackToMainMenu()
+        {
+            if (game is PlayerGame playerGame)
+            {
+                playerGame.CleanUpSockets();
+            }
+            goBack?.Invoke(this, EventArgs.Empty);
+        }
+
+        public void HighLightMove(Move move)
+        {
+            HighlightSquare(move.fromIndex);
+            HighlightSquare(move.toIndex);
+        }
+
+        public void UnHighLightMove(Move move)
+        {
+            ResetSquareColor(move.fromIndex);
+            ResetSquareColor(move.toIndex);
+        }
+
+        public async Task<ChessPiece> PromotionPopupFunc(Move move)
+        {
+            promoting = true;
+            _taskCompletionSource = new TaskCompletionSource<ChessPiece>();
+            ChessColor color = move.movingPiece.ChessColor;
+            int currentIndex = move.toIndex;
+            int incrementor = Game.PlayerColor == color ? 8 : -8;
+            List<ChessPiece> piecesToChooseFrom = new List<ChessPiece> { new Queen(color), new Rook(color), new Knight(color), new Bishop(color) };
+            List<ChessSquareUI> chessSquareUIs = new List<ChessSquareUI>();
+
+            for (int i = 0; i < piecesToChooseFrom.Count; i++)
+            {
+                int row = currentIndex / 8;
+                int col = currentIndex % 8;
+                ChessSquareUI chessSquare = new ChessSquareUI(Brushes.Gray);
+                ChessSquareUI.SetRow(chessSquare, row);
+                ChessSquareUI.SetColumn(chessSquare, col);
+                ChessPiece chessPiece = piecesToChooseFrom.ElementAt(i);
+                ChessPieceUI pieceUI = new ChessPieceUI(chessPiece.uri);
+                chessSquare.Children.Add(pieceUI);
+
+                chessSquare.MouseLeftButtonDown += (sender, args) =>
+                {
+                    _taskCompletionSource.TrySetResult(chessPiece); // Complete the task with the selected piece
+                };
+                mainBoard.Children.Add(chessSquare);
+                chessSquareUIs.Add(chessSquare);
+
+                currentIndex += incrementor;
+            }
+
+            ChessPiece selectedPiece = await GetSelectedPieceAsync();
+
+            for (int i = 0; i < piecesToChooseFrom.Count; i++)
+            {
+                mainBoard.Children.Remove(chessSquareUIs.ElementAt(i));
+            }
+
+            promoting = false;
+
+            return selectedPiece;
+        }
+        public Task<ChessPiece> GetSelectedPieceAsync()
+        {
+            return _taskCompletionSource.Task;
+        }
     }
 }

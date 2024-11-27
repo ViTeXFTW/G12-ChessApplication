@@ -61,7 +61,6 @@ namespace G12_ChessApplication
 
         private void OnOptionSelected(object sender, OptionSelectedEventArgs e)
         {
-
             // Close the login window
             if (sender is Window mainMenuWindow)
             {
@@ -71,7 +70,16 @@ namespace G12_ChessApplication
             switch (e.SelectedOption)
             {
                 case "PlayChess":
-                    init_game();
+                    init_game("Host", "play");
+                    break;
+                case "JoinGame":
+                    init_game(e.Code, "play");
+                    break;
+                case "Puzzles":
+                    init_game("Host", "puzzles");
+                    break;
+                case "Analysis":
+                    init_game("Host", "Analysis");
                     break;
                 case "Settings":
                     break;
@@ -86,10 +94,29 @@ namespace G12_ChessApplication
             }
         }
 
-        private void init_game()
+        private void init_game(string code, string gameType)
         {
-            var gameWindow = new MainWindow();
+            var gameWindow = new MainWindow(gameType, code);
+            gameWindow.goBack += BackFromGame;
             gameWindow.Show();
+        }
+
+        private void BackFromGame(object sender, EventArgs e)
+        {
+            // Close the game window
+            if (sender is Window gameWindow)
+            {
+                gameWindow.Hide();
+            }
+
+            // Show the main menu window
+            init_mainmenu();
+
+            // Close the game window
+            if (sender is Window gameWindowToClose)
+            {
+                gameWindowToClose.Close();
+            }
         }
     }
 
