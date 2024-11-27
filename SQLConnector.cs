@@ -136,7 +136,6 @@ public class SQLConnector
     {
         using (var context = new AppDbContext())
         {
-
             // Check that both users exist
             var player1 = await context.Login.FindAsync(P1Username);
             var player2 = await context.Login.FindAsync(P2Username);
@@ -145,6 +144,10 @@ public class SQLConnector
             {
                 throw new Exception("One or both users do not exist.");
             }
+
+            // Ensure usernames are ordered alphabetically
+            P1Username = string.Compare(P1Username, P2Username) <= 0 ? P1Username : P2Username;
+            P2Username = string.Compare(P1Username, P2Username) <= 0 ? P2Username : P1Username;
 
             // Try to find an existing match between the two players
             var match = await context.Matches
