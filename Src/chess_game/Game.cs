@@ -45,7 +45,6 @@ namespace G12_ChessApplication.Src.chess_game
         {
             mainWindow = main;
             PlayerColor = chessColor;
-            UserPlayer = new Player("User", chessColor);
             gameState = FenParser.CreatePieceArray();
         }
 
@@ -321,7 +320,7 @@ namespace G12_ChessApplication.Src.chess_game
             return kingIndex;
         }
 
-        public void HandleChecks()
+        public async void HandleChecks()
         {
             List<List<Move>> checks = IsKingInCheck(ref gameState);
             Trace.WriteLine("Amount of checks: " + checks.Count);
@@ -373,6 +372,7 @@ namespace G12_ChessApplication.Src.chess_game
                     if (Online)
                     {
                         SendMsg("CheckMate  " + chessColor);
+                        await HandleGameEnd(true, chessColor);
                     }
                     Trace.WriteLine("Player " + chessColor + " has won!!!!");
                     MessageBox.Show("Player " + chessColor + " has won you lose !!!!");
@@ -383,6 +383,7 @@ namespace G12_ChessApplication.Src.chess_game
                 if (Online)
                 {
                     SendMsg("StaleMate");
+                    await HandleGameEnd(false, ChessColor.WHITE); // Color doesn't matter for stalemate
                 }
                 staleMate = true;
                 MessageBox.Show("BUHUUU YOU LOSE!");
@@ -443,6 +444,8 @@ namespace G12_ChessApplication.Src.chess_game
             Array.Reverse(charArray);
             return new string(charArray);
         }
+
+        public virtual async Task HandleGameEnd(bool isCheckmate, ChessColor winnerColor) { }
     }
 
     public class GameRecord

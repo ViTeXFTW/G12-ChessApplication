@@ -74,7 +74,7 @@ namespace G12_ChessApplication
             switch (e.SelectedOption)
             {
                 case "PlayChess":
-                    init_game("Host", "play");
+                    init_game("Host", "play", currentUser.Username);
                     break;
                 case "JoinGame":
                     init_game(e.Code, "play");
@@ -98,9 +98,9 @@ namespace G12_ChessApplication
             }
         }
 
-        private void init_game(string code, string gameType)
+        private void init_game(string code, string gameType, string userName = "")
         {
-            var gameWindow = new MainWindow(gameType, code);
+            var gameWindow = new MainWindow(gameType, code, userName);
             gameWindow.goBack += BackFromGame;
             gameWindow.Show();
         }
