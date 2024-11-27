@@ -35,6 +35,10 @@ namespace G12_ChessApplication
         public static int boardHeight { get; set; } = 500;
         public static int boardWidth { get; set; } = 500;
 
+        public bool promoting { get; set; } = false;
+
+        private TaskCompletionSource<ChessPiece> _taskCompletionSource;
+
         public static SolidColorBrush DefaultCheckColor = Brushes.Cyan;
         public static SolidColorBrush DefaultLastMoveColor = Brushes.IndianRed;
         public static SolidColorBrush DefaultLegalMoveColor = Brushes.Gray;
@@ -77,20 +81,23 @@ namespace G12_ChessApplication
 
         private void InitializeBoard()
         {
-            
             mainBoard = new ChessBoard();
             //mainBoard.VerticalAlignment = VerticalAlignment.Top;
             //mainBoard.HorizontalAlignment = HorizontalAlignment.Left;
             foreach (ChessSquareUI square in mainBoard.Children)
             {
-                square.MouseDown += OnBoardClick;
+                square.MouseLeftButtonDown += OnBoardClick;
             }
-            GameGrid.Children.Add(mainBoard);
+            BoardGrid.Children.Add(mainBoard);
             game.Setup();
         }
 
         private void OnBoardClick(object sender, MouseButtonEventArgs e)
         {
+            if (promoting)
+            {
+                return;
+            }
             ChessSquareUI square = (ChessSquareUI)sender;
             int index = mainBoard.Children.IndexOf(square);
             game.SquareClicked(index);
@@ -238,16 +245,49 @@ namespace G12_ChessApplication
 
         public async Task<ChessPiece> PromotionPopupFunc(Move move)
         {
-            PromotionPopup popup = new PromotionPopup(move.movingPiece.ChessColor, move.toIndex);
+            promoting = true;
+            _taskCompletionSource = new TaskCompletionSource<ChessPiece>();
+            ChessColor color = move.movingPiece.ChessColor;
+            int currentIndex = move.toIndex;
+            int incrementor = Game.PlayerColor == color ? 8 : -8;
+            List<ChessPiece> piecesToChooseFrom = new List<ChessPiece> { new Queen(color), new Rook(color), new Knight(color), new Bishop(color) };
+            List<ChessSquareUI> chessSquareUIs = new List<ChessSquareUI>();
 
+            for (int i = 0; i < piecesToChooseFrom.Count; i++)
+            {
+                int row = currentIndex / 8;
+                int col = currentIndex % 8;
+                ChessSquareUI chessSquare = new ChessSquareUI(Brushes.Gray);
+                ChessSquareUI.SetRow(chessSquare, row);
+                ChessSquareUI.SetColumn(chessSquare, col);
+                ChessPiece chessPiece = piecesToChooseFrom.ElementAt(i);
+                ChessPieceUI pieceUI = new ChessPieceUI(chessPiece.uri);
+                chessSquare.Children.Add(pieceUI);
 
-            PopupGrid.Children.Add(popup);
+                chessSquare.MouseLeftButtonDown += (sender, args) =>
+                {
+                    _taskCompletionSource.TrySetResult(chessPiece); // Complete the task with the selected piece
+                };
+                mainBoard.Children.Add(chessSquare);
+                chessSquareUIs.Add(chessSquare);
 
-            ChessPiece selectedPiece = await popup.GetSelectedPieceAsync();
+                currentIndex += incrementor;
+            }
 
-            PopupGrid.Children.Remove(popup);
+            ChessPiece selectedPiece = await GetSelectedPieceAsync();
+
+            for (int i = 0; i < piecesToChooseFrom.Count; i++)
+            {
+                mainBoard.Children.Remove(chessSquareUIs.ElementAt(i));
+            }
+
+            promoting = false;
 
             return selectedPiece;
+        }
+        public Task<ChessPiece> GetSelectedPieceAsync()
+        {
+            return _taskCompletionSource.Task;
         }
     }
 }

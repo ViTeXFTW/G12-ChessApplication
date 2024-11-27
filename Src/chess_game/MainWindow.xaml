@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:G12_ChessApplication"
         mc:Ignorable="d"
         Title="MainWindow" Height="700" Width="1000">
-    <Grid x:Name="Game">
+    <Grid x:Name="GameGrid">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="1*" />
             <ColumnDefinition Width="5*" />
@@ -18,7 +18,7 @@
             <Button Content="Undo" Click="Button_Click"/>
             <Button Content="Go back" Click="Button_Click_1" />
         </StackPanel>
-        <Grid x:Name="GameGrid" Grid.Column="1"/>
+        <Grid x:Name="BoardGrid" Grid.Column="1"/>
         <Grid x:Name="PopupGrid" Grid.Column="1"/>
         <DataGrid x:Name="GameHistory" AutoGenerateColumns="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="2">
             <DataGrid.Columns>
