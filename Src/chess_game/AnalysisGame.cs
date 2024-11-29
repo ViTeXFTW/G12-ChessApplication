@@ -18,7 +18,10 @@ namespace G12_ChessApplication.Src.chess_game
 {
     class AnalysisGame : Game
     {
-        public AnalysisGame(MainWindow main) : base(main, ChessColor.WHITE) { }
+        public AnalysisGame(MainWindow main) : base(main, ChessColor.WHITE) 
+        {
+            UserPlayer = new Player("User", ChessColor.WHITE);
+        }
 
         public override void HandleClick(int index)
         {
