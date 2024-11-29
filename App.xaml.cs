@@ -77,7 +77,7 @@ namespace G12_ChessApplication
                     init_game("Host", "play", currentUser.Username);
                     break;
                 case "JoinGame":
-                    init_game(e.Code, "play");
+                    init_game(e.Code, "play", currentUser.Username);
                     break;
                 case "Puzzles":
                     init_game("Host", "puzzles");

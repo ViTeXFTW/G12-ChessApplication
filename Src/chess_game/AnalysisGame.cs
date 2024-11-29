@@ -32,10 +32,5 @@ namespace G12_ChessApplication.Src.chess_game
                 HandleChecks();
             }
         }
-
-        public override void Setup()
-        {
-            MainWindow.mainBoard.SetBoardSetup();
-        }
     }
 }

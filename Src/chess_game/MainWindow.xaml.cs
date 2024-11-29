@@ -77,8 +77,8 @@ namespace G12_ChessApplication
                 }
             }
 
-            SetupGameType();
             InitializeBoard();
+            SetupGameType();
         }
 
         private void SetupGameType()
@@ -114,7 +114,6 @@ namespace G12_ChessApplication
             ChessBoard.SetColumn(mainBoard, 1);
             ChessBoard.SetRow(mainBoard, 0);
             GameGrid.Children.Add(mainBoard);
-            game.Setup();
         }
 
         private void OnBoardClick(object sender, MouseButtonEventArgs e)

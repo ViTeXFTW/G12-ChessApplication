@@ -28,8 +28,8 @@ namespace G12_ChessApplication.Src.chess_game
 
         private bool host { get; set; } = true;
 
-        public string userPlayerUsername { get; set; }
-        public string userOpponentUsername { get; set; }
+        public string userPlayerUsername { get; set; } = "";
+        public string userOpponentUsername { get; set; } = "";
 
         private int? selectedSquareIndex = null;
         public PlayerGame(MainWindow main, string code, ChessColor chessColor, string userName) : base(main, chessColor)
@@ -42,6 +42,8 @@ namespace G12_ChessApplication.Src.chess_game
                 turnToMove = false;
             }
             Online = true;
+            MainWindow.mainBoard.SetBoardSetup();
+            SetUpSocket();
         }
 
         private void SetUpSocket()
@@ -62,12 +64,13 @@ namespace G12_ChessApplication.Src.chess_game
             {
                 _client = new TcpClient(_code, 12345);
                 _stream = _client.GetStream();
-                SendObject(_stream, "Username " + userPlayerUsername);
-                Trace.WriteLine("Connected to server");
 
                 _clientThread = new Thread(ReceiveMessages);
                 _clientThread.IsBackground = true;
                 _clientThread.Start();
+
+                SendObject(_stream, "Username " + userPlayerUsername);
+                Trace.WriteLine("Connected to server");
             }
             catch (SocketException)
             {
@@ -81,20 +84,25 @@ namespace G12_ChessApplication.Src.chess_game
 
         private void ReceiveMessages()
         {
-
             while (true)
             {
+                if (_stream == null || _client == null)
+                {
+                    break;
+                }
                 try
                 {
-                    Object obj = ReceiveObject(_stream);
+                    if (_stream.DataAvailable)
+                    {
+                        Object obj = ReceiveObject(_stream);
 
-                    //Move oppMove = ReceiveMove(_stream);
-                    HandleMessage(obj);
+                        //Move oppMove = ReceiveMove(_stream);
+                        HandleMessage(obj);
+                    }
                 }
                 catch
                 {
-                    Trace.WriteLine("Server disconnected.\n");
-                    break;
+                    Trace.WriteLine("Failed to receive.\n");
                 }
             }
         }
@@ -115,35 +123,67 @@ namespace G12_ChessApplication.Src.chess_game
                 {
                     break;
                 }
+
                 try
                 {
-                    TryConnect();
+                    TcpClient client = _server.AcceptTcpClient();
+                    NetworkStream networkStream = client.GetStream();
+                    Object obj = ReceiveObject(networkStream);
+                    if (obj is string Username)
+                    {
+                        string[] commands = Username.Split(" ");
+                        if ( (commands[1] == userOpponentUsername || _client == null) && commands[1] != userPlayerUsername)
+                        {
+                            userOpponentUsername = commands[1];
+                            if (_client != null)
+                            {
+                                _client.Close();
+                                _client = null;
+                                Thread.Sleep(100);
+                            }
+                            HandleClientConnection(client);
+                        }
+                        else
+                        {
+                            SendObject(networkStream, "DENIED");
+                        }
+                    }
                 }
-                catch (Exception)
+                catch (ObjectDisposedException)
                 {
-
+                    // Server was stopped
+                    Trace.WriteLine("Server stopped listening.");
                     break;
                 }
-            }
-
-            void TryConnect()
-            {
-                TcpClient client = _server.AcceptTcpClient();
-                _stream = client.GetStream();
-                SendObject(_stream, "Color " + (int) PlayerColor );
-                SendObject(_stream, "Turn " + turnToMove );
-                SendObject(_stream, "Username " + userPlayerUsername);
-                string board = FenParser.GetFenStringFromArray(gameState);
-                if (PlayerColor != ChessColor.WHITE)
+                catch (Exception ex)
                 {
-                    board = Reverse(board);
+                    Trace.WriteLine($"Error in ListenForClients: {ex.Message}");
                 }
-                SendObject(_stream, "Board " + board);
-                SendGameHistrory(_stream);
-                _clientThread = new Thread(ReceiveMessages);
-                _clientThread.IsBackground = true;
-                _clientThread.Start();
             }
+        }
+
+        void HandleClientConnection(TcpClient client)
+        {
+            _client = client;
+            _stream = client.GetStream();
+            _clientThread = new Thread(ReceiveMessages);
+            _clientThread.IsBackground = true;
+            _clientThread.Start();
+
+            Application.Current.Dispatcher.BeginInvoke(
+              DispatcherPriority.Background,
+                new Action(() => {
+                    SendObject(_stream, "Color " + (int)PlayerColor);
+                    SendObject(_stream, "Turn " + turnToMove);
+                    SendObject(_stream, "Username " + userPlayerUsername);
+                    string board = FenParser.GetFenStringFromArray(gameState);
+                    if (PlayerColor != ChessColor.WHITE)
+                    {
+                        board = Reverse(board);
+                    }
+                    SendObject(_stream, "Board " + board);
+                    SendGameHistrory(_stream);
+                }));
         }
 
         private void SendGameHistrory(NetworkStream stream)
@@ -206,7 +246,6 @@ namespace G12_ChessApplication.Src.chess_game
                         {
                             UserPlayer.SetColor(PlayerColor);
                         }
-                        Setup();
                         break;
                     case "Turn":
                         turnToMove = command[1] == "False";
@@ -218,6 +257,9 @@ namespace G12_ChessApplication.Src.chess_game
                         break;
                     case "Username":
                         userOpponentUsername = command[1];
+                        break;
+                    case "DENIED":
+                        mainWindow.GoBackToMainMenu();
                         break;
                     default:
                         break;
@@ -242,7 +284,6 @@ namespace G12_ChessApplication.Src.chess_game
             // Send the length of the data first, so the receiver knows how much to read
             byte[] lengthPrefix = BitConverter.GetBytes(jsonBytes.Length);
             stream.Write(lengthPrefix, 0, lengthPrefix.Length);
-
             // Send the serialized JSON object
             stream.Write(jsonBytes, 0, jsonBytes.Length);
             stream.Flush();
@@ -251,14 +292,12 @@ namespace G12_ChessApplication.Src.chess_game
         {
             // Read the length prefix to determine the size of the incoming data
             byte[] lengthPrefix = new byte[4];
-            stream.Read(lengthPrefix, 0, lengthPrefix.Length);
+            ReadExactBytes(stream, lengthPrefix, 4);
             int dataLength = BitConverter.ToInt32(lengthPrefix, 0);
 
-            // Read the actual data
             byte[] jsonBytes = new byte[dataLength];
-            stream.Read(jsonBytes, 0, dataLength);
+            ReadExactBytes(stream, jsonBytes, dataLength);
 
-            // Convert byte array to JSON string
             string jsonString = Encoding.UTF8.GetString(jsonBytes);
 
             // Deserialize JSON string to object
@@ -283,6 +322,17 @@ namespace G12_ChessApplication.Src.chess_game
             }
 
         }
+        void ReadExactBytes(NetworkStream stream, byte[] buffer, int count)
+        {
+            int bytesRead = 0;
+            while (bytesRead < count)
+            {
+                int read = stream.Read(buffer, bytesRead, count - bytesRead);
+                if (read == 0)
+                    throw new IOException("Connection closed before all data was received.");
+                bytesRead += read;
+            }
+        }
 
         // Method to send the Move object
         void SendMove(NetworkStream networkStream, Move move)
@@ -306,15 +356,17 @@ namespace G12_ChessApplication.Src.chess_game
             {
                 _server.Stop();
                 _server.Dispose();
+                _server = null;
             }
             if (_client != null)
             {
                 _client.Close();
-                _client.Dispose();
+                _client = null;
             }
             if (_stream != null)
             {
                 _stream.Close();
+                _stream = null;
             }
 
         }
@@ -365,13 +417,7 @@ namespace G12_ChessApplication.Src.chess_game
             SendObject(_stream, msg);
         }
 
-        public override void Setup()
-        {
-            SetUpSocket();
-            MainWindow.mainBoard.SetBoardSetup();
-        }
-
-        public virtual async Task HandleGameEnd(bool isCheckmate, ChessColor winnerColor)
+        public override async Task HandleGameEnd(bool isCheckmate, ChessColor winnerColor)
         {
             if (Online)
             {
@@ -379,7 +425,7 @@ namespace G12_ChessApplication.Src.chess_game
                 int result;
                 if (isCheckmate)
                 {
-                    result = winnerColor == UserPlayer.Color ? 1 : 0;
+                    result = host ? 2 : 1;
                 }
                 else
                 {

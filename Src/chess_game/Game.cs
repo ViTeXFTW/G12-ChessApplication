@@ -46,6 +46,9 @@ namespace G12_ChessApplication.Src.chess_game
             mainWindow = main;
             PlayerColor = chessColor;
             gameState = FenParser.CreatePieceArray();
+            MainWindow.mainBoard.SetBoardSetup();
+            oneCheck = false;
+            twoCheck = false;
         }
 
         public virtual void SquareClicked(int index)
@@ -322,7 +325,7 @@ namespace G12_ChessApplication.Src.chess_game
 
         public async void HandleChecks()
         {
-            List<List<Move>> checks = IsKingInCheck(ref gameState, turnToMove ? UserPlayer.Color : (UserPlayer.Color == ChessColor.WHITE ? ChessColor.BLACK : ChessColor.WHITE));
+            List<List<Move>> checks = IsKingInCheck(ref gameState, turnToMove ? UserPlayer.Color : UserPlayer.Color);
             Trace.WriteLine("Amount of checks: " + checks.Count);
             checkIndexes.Clear();
             oneCheck = checks.Count == 1;
@@ -401,7 +404,6 @@ namespace G12_ChessApplication.Src.chess_game
 
         public virtual void SendMsg(string msg) { }
 
-        public abstract void Setup();
 
         public void AddMoveToHistory(Move move)
         {
