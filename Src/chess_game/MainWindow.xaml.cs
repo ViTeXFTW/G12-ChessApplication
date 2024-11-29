@@ -88,7 +88,9 @@ namespace G12_ChessApplication
             {
                 square.MouseLeftButtonDown += OnBoardClick;
             }
-            BoardGrid.Children.Add(mainBoard);
+            ChessBoard.SetColumn(mainBoard, 1);
+            ChessBoard.SetRow(mainBoard, 0);
+            GameGrid.Children.Add(mainBoard);
             game.Setup();
         }
 
