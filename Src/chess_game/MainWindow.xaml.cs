@@ -48,6 +48,7 @@ namespace G12_ChessApplication
         public static int DefaultPopupHeightRatio = 2;
         public static int DefaultPopupWidthRatio = 8;
 
+        public string LocalIP {  get; set; } 
         public string userName { get; set; }
         public string userOpponent { get; set; }
 
@@ -69,6 +70,7 @@ namespace G12_ChessApplication
                 string? localIP = Dns.GetHostEntry(Dns.GetHostName()).AddressList.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork)?.ToString();
                 if (localIP != null)
                 {
+                    LocalIP = localIP.ToString();
                     IPLabel.Content = localIP;
                 } else {
                     IPLabel.Content = "Unknown IP";

@@ -65,7 +65,7 @@ namespace G12_ChessApplication
 
         private void OnOptionSelected(object sender, OptionSelectedEventArgs e)
         {
-            // Close the login window
+            // Close the window
             if (sender is Window mainMenuWindow)
             {
                 mainMenuWindow.Hide();
@@ -87,15 +87,25 @@ namespace G12_ChessApplication
                     break;
                 case "Settings":
                     break;
+                case "LeaderBoard":
+                    open_leaderboard(currentUser.Username);
+                    break;
                 default:
                     break;
             }
 
-            // Close the login window
+            // Close the window
             if (sender is Window mainMenuWindowToClose)
             {
                 mainMenuWindowToClose.Close();
             }
+        }
+
+        private void open_leaderboard(string username)
+        {
+            var leaderboardWindow = new Leaderboard(username);
+            leaderboardWindow.goBack += BackFromGame;
+            leaderboardWindow.Show();
         }
 
         private void init_game(string code, string gameType, string userName = "")

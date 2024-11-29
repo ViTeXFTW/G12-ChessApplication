@@ -60,9 +60,7 @@ namespace G12_ChessApplication
 
         private void OpenLeaderboard_Click(object sender, RoutedEventArgs e)
         {
-            Leaderboard leaderboard = new Leaderboard(username);
-            leaderboard.Show();
-            this.Close();
+            OptionSelected?.Invoke(this, new OptionSelectedEventArgs { SelectedOption = "LeaderBoard" });
         }
     }
 

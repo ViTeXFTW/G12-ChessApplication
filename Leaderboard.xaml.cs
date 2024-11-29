@@ -42,6 +42,7 @@ namespace G12_ChessApplication
 
     public partial class Leaderboard : Window
     {
+        public event EventHandler goBack;
         private SQLConnector dbConnector;
         private string username;
         public Leaderboard(string username)
@@ -75,9 +76,7 @@ namespace G12_ChessApplication
 
         private void BackBtn_Click(object sender, RoutedEventArgs e)
         {
-            MainMenuWindow mainMenu = new MainMenuWindow(username);
-            mainMenu.Show();
-            this.Close();
+            goBack?.Invoke(this, EventArgs.Empty);
         }
     }
 }
