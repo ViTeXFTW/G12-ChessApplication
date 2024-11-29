@@ -28,10 +28,15 @@ namespace G12_ChessApplication.Src.chess_game
 
         private bool host { get; set; } = true;
 
+        public string userPlayerUsername { get; set; }
+        public string userOpponentUsername { get; set; }
+
         private int? selectedSquareIndex = null;
-        public PlayerGame(MainWindow main, string code, ChessColor chessColor) : base(main, chessColor)
+        public PlayerGame(MainWindow main, string code, ChessColor chessColor, string userName) : base(main, chessColor)
         {
             _code = code;
+            userPlayerUsername = userName;
+            UserPlayer = new Player(userName, chessColor);
             if (chessColor == ChessColor.BLACK)
             {
                 turnToMove = false;
@@ -57,6 +62,7 @@ namespace G12_ChessApplication.Src.chess_game
             {
                 _client = new TcpClient(_code, 12345);
                 _stream = _client.GetStream();
+                SendObject(_stream, "Username " + userPlayerUsername);
                 Trace.WriteLine("Connected to server");
 
                 _clientThread = new Thread(ReceiveMessages);
@@ -126,6 +132,7 @@ namespace G12_ChessApplication.Src.chess_game
                 _stream = client.GetStream();
                 SendObject(_stream, "Color " + (int) PlayerColor );
                 SendObject(_stream, "Turn " + turnToMove );
+                SendObject(_stream, "Username " + userPlayerUsername);
                 string board = FenParser.GetFenStringFromArray(gameState);
                 if (PlayerColor != ChessColor.WHITE)
                 {
@@ -191,7 +198,14 @@ namespace G12_ChessApplication.Src.chess_game
                         break;
                     case "Color":
                         PlayerColor = (ChessColor)Math.Abs(Convert.ToInt32(command[1]) - 1);
-                        UserPlayer.SetColor(PlayerColor);
+                        if (UserPlayer == null)
+                        {
+                            UserPlayer = new Player(userPlayerUsername, PlayerColor);
+                        }
+                        else
+                        {
+                            UserPlayer.SetColor(PlayerColor);
+                        }
                         Setup();
                         break;
                     case "Turn":
@@ -201,6 +215,9 @@ namespace G12_ChessApplication.Src.chess_game
                         string board = command[1];
                         gameState = FenParser.CreatePieceArray(board);
                         MainWindow.mainBoard.SetBoardSetup(board);
+                        break;
+                    case "Username":
+                        userOpponentUsername = command[1];
                         break;
                     default:
                         break;
@@ -352,6 +369,25 @@ namespace G12_ChessApplication.Src.chess_game
         {
             SetUpSocket();
             MainWindow.mainBoard.SetBoardSetup();
+        }
+
+        public virtual async Task HandleGameEnd(bool isCheckmate, ChessColor winnerColor)
+        {
+            if (Online)
+            {
+                var dbConnector = new SQLConnector();
+                int result;
+                if (isCheckmate)
+                {
+                    result = winnerColor == UserPlayer.Color ? 1 : 0;
+                }
+                else
+                {
+                    result = 0;
+                }
+
+                await dbConnector.AddOrUpdateMatchResult(userPlayerUsername, userOpponentUsername, result);
+            }
         }
     }
 }

@@ -45,7 +45,6 @@ namespace G12_ChessApplication.Src.chess_game
         {
             mainWindow = main;
             PlayerColor = chessColor;
-            UserPlayer = new Player("User", chessColor);
             gameState = FenParser.CreatePieceArray();
         }
 
@@ -273,12 +272,12 @@ namespace G12_ChessApplication.Src.chess_game
 
         }
 
-        public static List<List<Move>> IsKingInCheck(ref ChessPiece[] gameState, int indexToCheck = -1)
+        public static List<List<Move>> IsKingInCheck(ref ChessPiece[] gameState, ChessColor colorToCheck, int indexToCheck = -1)
         {
             List<List<Move>> checkIndexes = new List<List<Move>>();
-            int kingIndex = GetKingIndex(ref gameState, Game.UserPlayer.Color);
+            int kingIndex = GetKingIndex(ref gameState, colorToCheck);
             ChessPiece kingPiece = gameState[kingIndex];
-            
+
             kingIndex = indexToCheck == -1 ? kingIndex : indexToCheck;
 
             int kingRow = kingIndex / 8;
@@ -321,9 +320,9 @@ namespace G12_ChessApplication.Src.chess_game
             return kingIndex;
         }
 
-        public void HandleChecks()
+        public async void HandleChecks()
         {
-            List<List<Move>> checks = IsKingInCheck(ref gameState);
+            List<List<Move>> checks = IsKingInCheck(ref gameState, turnToMove ? UserPlayer.Color : (UserPlayer.Color == ChessColor.WHITE ? ChessColor.BLACK : ChessColor.WHITE));
             Trace.WriteLine("Amount of checks: " + checks.Count);
             checkIndexes.Clear();
             oneCheck = checks.Count == 1;
@@ -373,6 +372,7 @@ namespace G12_ChessApplication.Src.chess_game
                     if (Online)
                     {
                         SendMsg("CheckMate  " + chessColor);
+                        await HandleGameEnd(true, chessColor);
                     }
                     Trace.WriteLine("Player " + chessColor + " has won!!!!");
                     MessageBox.Show("Player " + chessColor + " has won you lose !!!!");
@@ -383,6 +383,7 @@ namespace G12_ChessApplication.Src.chess_game
                 if (Online)
                 {
                     SendMsg("StaleMate");
+                    await HandleGameEnd(false, ChessColor.WHITE); // Color doesn't matter for stalemate
                 }
                 staleMate = true;
                 MessageBox.Show("BUHUUU YOU LOSE!");
@@ -443,6 +444,8 @@ namespace G12_ChessApplication.Src.chess_game
             Array.Reverse(charArray);
             return new string(charArray);
         }
+
+        public virtual async Task HandleGameEnd(bool isCheckmate, ChessColor winnerColor) { }
     }
 
     public class GameRecord

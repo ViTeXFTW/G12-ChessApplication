@@ -19,6 +19,8 @@ using System.Windows.Shapes;
 using G12_ChessApplication.Src.chess_game;
 using G12_ChessApplication.Src.chess_game.util;
 using Color = System.Windows.Media.Color;
+using System.Net;
+using System.Net.Sockets;
 
 namespace G12_ChessApplication
 {
@@ -46,15 +48,32 @@ namespace G12_ChessApplication
         public static int DefaultPopupHeightRatio = 2;
         public static int DefaultPopupWidthRatio = 8;
 
+        public string userName { get; set; }
+        public string userOpponent { get; set; }
 
-        public MainWindow(string gameType, string code = "")
+        public MainWindow(string gameType, string code = "", string userName = "")
         {
             InitializeComponent();
+
             if (code != "")
             {
                 GameCode = code;
             }
             GameType = gameType;
+            this.userName = userName;
+            this.userOpponent = userOpponent;
+
+
+            if (code == "Host")
+            {
+                string? localIP = Dns.GetHostEntry(Dns.GetHostName()).AddressList.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork)?.ToString();
+                if (localIP != null)
+                {
+                    IPLabel.Content = localIP;
+                } else {
+                    IPLabel.Content = "Unknown IP";
+                }
+            }
 
             SetupGameType();
             InitializeBoard();
@@ -66,7 +85,7 @@ namespace G12_ChessApplication
             {
                 case "play":
                     ChessColor color = (ChessColor)RandomNumberGenerator.GetInt32(0, 2);
-                    game = new PlayerGame(this, GameCode, color);
+                    game = new PlayerGame(this, GameCode, color, userName);
                     break;
                 case "puzzles":
                     game = new PuzzleGame(this);
@@ -78,6 +97,8 @@ namespace G12_ChessApplication
                     break;
             }
         }
+
+       
 
         private void InitializeBoard()
         {

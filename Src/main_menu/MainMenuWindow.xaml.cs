@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -19,10 +20,13 @@ namespace G12_ChessApplication
     /// </summary>
     public partial class MainMenuWindow : Window
     {
+        private string username;
         public event EventHandler<OptionSelectedEventArgs> OptionSelected;
-        public MainMenuWindow()
+        public MainMenuWindow(string username)
         {
             InitializeComponent();
+            this.username = username;
+            UsernameLabel.Content = this.username;
         }
 
         private void PlayChessBtn_Click(object sender, RoutedEventArgs e)
@@ -52,6 +56,13 @@ namespace G12_ChessApplication
         private void AnalysisBtn_Click(object sender, RoutedEventArgs e)
         {
             OptionSelected?.Invoke(this, new OptionSelectedEventArgs { SelectedOption = "Analysis" });
+        }
+
+        private void OpenLeaderboard_Click(object sender, RoutedEventArgs e)
+        {
+            Leaderboard leaderboard = new Leaderboard(username);
+            leaderboard.Show();
+            this.Close();
         }
     }
 
