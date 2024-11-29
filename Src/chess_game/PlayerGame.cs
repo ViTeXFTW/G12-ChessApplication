@@ -108,7 +108,7 @@ namespace G12_ChessApplication.Src.chess_game
         }
         private void StartServer()
         {
-            _server = new TcpListener(IPAddress.Any, 12345);
+            _server = new TcpListener(IPAddress.Parse(mainWindow.LocalIP), 12345);
             _server.Start();
             _listenerThread = new Thread(ListenForClients);
             _listenerThread.IsBackground = true;
