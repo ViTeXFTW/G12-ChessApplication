@@ -134,7 +134,12 @@ namespace G12_ChessApplication.Src.chess_game
                         string[] commands = Username.Split(" ");
                         if ( (commands[1] == userOpponentUsername || _client == null) && commands[1] != userPlayerUsername)
                         {
-                            userOpponentUsername = commands[1];
+                            Application.Current.Dispatcher.BeginInvoke(
+                              DispatcherPriority.Background,
+                                new Action(() => {
+                                    userOpponentUsername = commands[1];
+                                    mainWindow.SetOpponent(userOpponentUsername);
+                                }));
                             if (_client != null)
                             {
                                 _client.Close();
@@ -257,6 +262,7 @@ namespace G12_ChessApplication.Src.chess_game
                         break;
                     case "Username":
                         userOpponentUsername = command[1];
+                        mainWindow.SetOpponent(userOpponentUsername);
                         break;
                     case "DENIED":
                         mainWindow.GoBackToMainMenu();
@@ -425,7 +431,7 @@ namespace G12_ChessApplication.Src.chess_game
                 int result;
                 if (isCheckmate)
                 {
-                    result = host ? 2 : 1;
+                    result = 2;
                 }
                 else
                 {

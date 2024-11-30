@@ -31,6 +31,7 @@ namespace G12_ChessApplication
     {
         public event EventHandler goBack;
         public static ChessBoard mainBoard;
+
         public Game game;
         private string GameCode = string.Empty;
         public string GameType { get; }
@@ -47,6 +48,9 @@ namespace G12_ChessApplication
         public static int DefaultLegalMoveRatio = 4;
         public static int DefaultPopupHeightRatio = 2;
         public static int DefaultPopupWidthRatio = 8;
+
+        public TextBlock topPlayerName;
+        public TextBlock bottomPlayerName;
 
         public string LocalIP {  get; set; } 
         public string userName { get; set; }
@@ -86,6 +90,7 @@ namespace G12_ChessApplication
             switch(GameType)
             {
                 case "play":
+                    SetupPlayerNames();
                     ChessColor color = (ChessColor)RandomNumberGenerator.GetInt32(0, 2);
                     game = new PlayerGame(this, GameCode, color, userName);
                     break;
@@ -100,8 +105,6 @@ namespace G12_ChessApplication
             }
         }
 
-       
-
         private void InitializeBoard()
         {
             mainBoard = new ChessBoard();
@@ -111,9 +114,43 @@ namespace G12_ChessApplication
             {
                 square.MouseLeftButtonDown += OnBoardClick;
             }
-            ChessBoard.SetColumn(mainBoard, 1);
-            ChessBoard.SetRow(mainBoard, 0);
-            GameGrid.Children.Add(mainBoard);
+            //ChessBoard.SetColumn(mainBoard, 1);
+            //ChessBoard.SetRow(mainBoard, 0);
+            BoardGrid.Children.Add(mainBoard);
+        }
+
+        private void SetupPlayerNames()
+        {
+            // Define the rows
+            BoardGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) }); // Top row for player name
+            BoardGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(5, GridUnitType.Star) }); // Middle row for chessboard
+            BoardGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) }); // Bottom row for player name
+
+
+            Grid.SetRow(mainBoard, 1); // Assign to the second row
+
+            // Add the top player name
+            topPlayerName = new TextBlock
+            {
+                Text = "Unknown",
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                FontSize = 16
+            };
+            Grid.SetRow(topPlayerName, 0); // Assign to the first row
+            BoardGrid.Children.Add(topPlayerName);
+
+            // Add the bottom player name
+            bottomPlayerName = new TextBlock
+            {
+                Text = userName,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                FontSize = 16
+            };
+            Grid.SetRow(bottomPlayerName, 2); // Assign to the third row
+            BoardGrid.Children.Add(bottomPlayerName);
+
         }
 
         private void OnBoardClick(object sender, MouseButtonEventArgs e)
@@ -312,6 +349,11 @@ namespace G12_ChessApplication
         public Task<ChessPiece> GetSelectedPieceAsync()
         {
             return _taskCompletionSource.Task;
+        }
+
+        public void SetOpponent(string userOpponentUsername)
+        {
+            topPlayerName.Text = userOpponentUsername;
         }
     }
 }
