@@ -30,8 +30,6 @@ namespace G12_ChessApplication.Src.chess_game
 
         public string userPlayerUsername { get; set; } = "";
         public string userOpponentUsername { get; set; } = "";
-
-        private int? selectedSquareIndex = null;
         public PlayerGame(MainWindow main, string code, ChessColor chessColor, string userName) : base(main, chessColor)
         {
             _code = code;
@@ -75,10 +73,6 @@ namespace G12_ChessApplication.Src.chess_game
             catch (SocketException)
             {
                 mainWindow.GoBackToMainMenu();
-            }
-            catch (Exception e)
-            {
-
             }
         }
 
@@ -160,9 +154,9 @@ namespace G12_ChessApplication.Src.chess_game
                     Trace.WriteLine("Server stopped listening.");
                     break;
                 }
-                catch (Exception ex)
+                catch (SocketException s)
                 {
-                    Trace.WriteLine($"Error in ListenForClients: {ex.Message}");
+                    Trace.WriteLine(s.Message);
                 }
             }
         }
@@ -297,14 +291,23 @@ namespace G12_ChessApplication.Src.chess_game
         public Object ReceiveObject(NetworkStream stream)
         {
             // Read the length prefix to determine the size of the incoming data
-            byte[] lengthPrefix = new byte[4];
-            ReadExactBytes(stream, lengthPrefix, 4);
-            int dataLength = BitConverter.ToInt32(lengthPrefix, 0);
+            string jsonString = string.Empty;
+            try
+            {
+                byte[] lengthPrefix = new byte[4];
+                ReadExactBytes(stream, lengthPrefix, 4);
+                int dataLength = BitConverter.ToInt32(lengthPrefix, 0);
 
-            byte[] jsonBytes = new byte[dataLength];
-            ReadExactBytes(stream, jsonBytes, dataLength);
+                byte[] jsonBytes = new byte[dataLength];
+                ReadExactBytes(stream, jsonBytes, dataLength);
 
-            string jsonString = Encoding.UTF8.GetString(jsonBytes);
+                jsonString = Encoding.UTF8.GetString(jsonBytes);
+            }
+            catch (IOException i)
+            {
+                Trace.WriteLine(i.Message);
+                return "";
+            }
 
             // Deserialize JSON string to object
             try
@@ -394,12 +397,6 @@ namespace G12_ChessApplication.Src.chess_game
                     // Switch to the next player
                     ChessColor opponent = (UserPlayer.Color == ChessColor.WHITE) ? ChessColor.BLACK : ChessColor.WHITE;
                     Trace.WriteLine($"Changed player to {opponent}");
-                    //string message = "";
-                    //message += SelectedPieceIndex.ToString();
-                    //message += " " + index.ToString();
-                    //byte[] data = Encoding.ASCII.GetBytes(message);
-
-                    //_stream.Write(data, 0, data.Length);
 
 
                     Move currentMove = prevLegalMoves.Find(item => item.toIndex == index);
@@ -407,10 +404,10 @@ namespace G12_ChessApplication.Src.chess_game
                     currentMove = PlayerMoves.Last();
                     turnToMove = false;
                     SendObject(_stream, currentMove);
-                    //SendMove(_stream, currentMove);
                 }
                 catch (Exception e)
                 {
+                    Trace.WriteLine(e.Message);
                     _stream = null;
 
                 }
@@ -423,7 +420,7 @@ namespace G12_ChessApplication.Src.chess_game
             SendObject(_stream, msg);
         }
 
-        public override async Task HandleGameEnd(bool isCheckmate, ChessColor winnerColor)
+        public override async Task HandleGameEnd(bool isCheckmate, ChessColor winnerColor = ChessColor.WHITE)
         {
             if (Online)
             {

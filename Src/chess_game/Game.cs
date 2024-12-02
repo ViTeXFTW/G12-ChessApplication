@@ -386,7 +386,7 @@ namespace G12_ChessApplication.Src.chess_game
                 if (Online)
                 {
                     SendMsg("StaleMate");
-                    await HandleGameEnd(false, ChessColor.WHITE); // Color doesn't matter for stalemate
+                    await HandleGameEnd(false); // Color doesn't matter for stalemate
                 }
                 staleMate = true;
                 MessageBox.Show("BUHUUU YOU LOSE!");
@@ -447,7 +447,7 @@ namespace G12_ChessApplication.Src.chess_game
             return new string(charArray);
         }
 
-        public virtual async Task HandleGameEnd(bool isCheckmate, ChessColor winnerColor) { }
+        public virtual async Task HandleGameEnd(bool isCheckmate, ChessColor winnerColor = ChessColor.WHITE) { }
     }
 
     public class GameRecord
