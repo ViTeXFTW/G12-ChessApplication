@@ -251,8 +251,7 @@ namespace G12_ChessApplication.Src.chess_game
                         break;
                     case "Board":
                         string board = command[1];
-                        gameState = FenParser.CreatePieceArray(board);
-                        MainWindow.mainBoard.SetBoardSetup(board);
+                        SetGameState(board);
                         break;
                     case "Username":
                         userOpponentUsername = command[1];

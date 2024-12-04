@@ -21,6 +21,7 @@ using G12_ChessApplication.Src.chess_game.util;
 using Color = System.Windows.Media.Color;
 using System.Net;
 using System.Net.Sockets;
+using System.Windows.Media.Animation;
 
 namespace G12_ChessApplication
 {
@@ -51,6 +52,8 @@ namespace G12_ChessApplication
 
         public TextBlock topPlayerName;
         public TextBlock bottomPlayerName;
+        public TextBox fenString;
+        public Button enter;
 
         public string LocalIP {  get; set; } 
         public string userName { get; set; }
@@ -98,6 +101,7 @@ namespace G12_ChessApplication
                     game = new PuzzleGame(this);
                     break;
                 case "Analysis":
+                    SetupFenStringInput();
                     game = new AnalysisGame(this);
                     break;
                 default:
@@ -117,6 +121,41 @@ namespace G12_ChessApplication
             //ChessBoard.SetColumn(mainBoard, 1);
             //ChessBoard.SetRow(mainBoard, 0);
             BoardGrid.Children.Add(mainBoard);
+        }
+        private void SetupFenStringInput()
+        {
+            BoardGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(5, GridUnitType.Star) }); // Middle row for chessboard
+            BoardGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) }); // Bottom row for fen string
+            Grid.SetRow(mainBoard, 0); // Assign to the second row
+
+            fenString = new TextBox
+            {
+                Text = "7k/8/8/5Q2/8/8/8/K7",
+                HorizontalAlignment = HorizontalAlignment.Left,
+                VerticalAlignment = VerticalAlignment.Center,
+                FontSize = 16
+            };
+            Grid.SetRow(fenString, 1); // Assign to the bottom row
+            BoardGrid.Children.Add(fenString);
+
+            enter = new Button
+            {
+                Content = "Set",
+                HorizontalAlignment = HorizontalAlignment.Right,
+                VerticalAlignment = VerticalAlignment.Center,
+                FontSize = 16
+            };
+            enter.Click += SetFenString;
+            Grid.SetRow(enter, 1); // Assign to the bottom row
+            BoardGrid.Children.Add(enter);
+        }
+
+        private void SetFenString(object sender, RoutedEventArgs e)
+        {
+            if (fenString.Text != string.Empty)
+            {
+                game.SetGameState(fenString.Text);
+            }
         }
 
         private void SetupPlayerNames()

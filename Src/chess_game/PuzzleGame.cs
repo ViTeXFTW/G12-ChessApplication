@@ -29,9 +29,7 @@ namespace G12_ChessApplication.Src.chess_game
 
             Game.PlayerColor = CurrentPuzzle.color;
             Game.UserPlayer = new Player("User", CurrentPuzzle.color);
-
-            gameState = FenParser.CreatePieceArray(CurrentPuzzle.board);
-            MainWindow.mainBoard.SetBoardSetup(CurrentPuzzle.board);
+            SetGameState(CurrentPuzzle.board);
         }
 
         private void IsPuzzleDone()

@@ -94,7 +94,16 @@ namespace G12_ChessApplication.Src.chess_game
 
         public void SetGameState(string board)
         {
-            gameState = FenParser.CreatePieceArray(board);
+            try
+            {
+                gameState = FenParser.CreatePieceArray(board);
+            }
+            catch (ArgumentException)
+            {
+                return;
+            }
+
+            MainWindow.mainBoard.SetBoardSetup(board);
         }
 
         public bool CanSelectPieceAt(int index)
