@@ -389,7 +389,7 @@ namespace G12_ChessApplication.Src.chess_game
                     await HandleGameEnd(false); // Color doesn't matter for stalemate
                 }
                 staleMate = true;
-                MessageBox.Show("BUHUUU YOU LOSE!");
+                MessageBox.Show("Stalemate!");
             }
             else
             {

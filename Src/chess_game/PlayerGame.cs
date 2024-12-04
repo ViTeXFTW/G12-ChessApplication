@@ -233,7 +233,7 @@ namespace G12_ChessApplication.Src.chess_game
                         break;
                     case "StaleMate":
                         staleMate = true;
-                        MessageBox.Show("StaleMate dumbass!");
+                        MessageBox.Show("Stalemate!");
                         break;
                     case "Color":
                         PlayerColor = (ChessColor)Math.Abs(Convert.ToInt32(command[1]) - 1);

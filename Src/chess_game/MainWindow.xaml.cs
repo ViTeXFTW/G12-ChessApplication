@@ -75,9 +75,9 @@ namespace G12_ChessApplication
                 if (localIP != null)
                 {
                     LocalIP = localIP.ToString();
-                    IPLabel.Content = localIP;
+                    IPLabel.Text = localIP;
                 } else {
-                    IPLabel.Content = "Unknown IP";
+                    IPLabel.Text = "Unknown IP";
                 }
             }
 
