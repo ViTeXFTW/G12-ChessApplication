@@ -32,6 +32,7 @@ namespace G12_ChessApplication.Src.chess_game
                 ApplyMove(currentMove);
                 // Switch to the next player
                 UserPlayer.ChangePlayer();
+                CurrentPlayerColor = UserPlayer.Color;
                 HandleChecks();
             }
         }

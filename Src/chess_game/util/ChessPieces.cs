@@ -16,7 +16,7 @@ namespace G12_ChessApplication.Src.chess_game.util
     {
         public Pawn(ChessColor color) : base(color)
         {
-            string colorLetter = (ChessColor == ChessColor.WHITE) ? "w" : "b";
+            string colorLetter = (chessColor == ChessColor.WHITE) ? "w" : "b";
             uri = "pack://application:,,,/Images/" + colorLetter + "_pawn_2x_ns.png";
 
             directions = new List<Direction> { new Direction(-1, 0), new Direction(-1, -1), new Direction(-1, 1) };
@@ -91,7 +91,7 @@ namespace G12_ChessApplication.Src.chess_game.util
                     if (gameState[newIndex] != null)
                     {
                         // Can attack if piece is opponents and its diagonal
-                        if (this.ChessColor != gameState[newIndex].ChessColor && item.col != 0)
+                        if (this.chessColor != gameState[newIndex].chessColor && item.col != 0)
                         {
                             if (row == promotionRow)
                             {
@@ -128,7 +128,7 @@ namespace G12_ChessApplication.Src.chess_game.util
                 for (int i = 0; i < 2; i++)
                 {
                     int newIndex = fromRow * 8 + newCol;
-                    if (gameState[newIndex] is Pawn && gameState[newIndex].ChessColor != ChessColor)
+                    if (gameState[newIndex] is Pawn && gameState[newIndex].chessColor != chessColor)
                     {
                         if (lastMove.toIndex == newIndex)
                         {
@@ -215,10 +215,8 @@ namespace G12_ChessApplication.Src.chess_game.util
     {
         public Bishop(ChessColor color) : base(color)
         {
-            string colorLetter = (ChessColor == ChessColor.WHITE) ? "w" : "b";
+            string colorLetter = (chessColor == ChessColor.WHITE) ? "w" : "b";
             uri = "pack://application:,,,/Images/" + colorLetter + "_bishop_2x_ns.png";
-
-            pieceCharacter = "B";
             directions = new List<Direction> { new Direction(-1, -1), new Direction(-1, 1), new Direction(1, 1), new Direction(1, -1) };
         }
         public Bishop(Bishop b) : base(b) { }
@@ -239,10 +237,8 @@ namespace G12_ChessApplication.Src.chess_game.util
     {
         public Knight(ChessColor color) : base(color)
         {
-            string colorLetter = (ChessColor == ChessColor.WHITE) ? "w" : "b";
+            string colorLetter = (chessColor == ChessColor.WHITE) ? "w" : "b";
             uri = "pack://application:,,,/Images/" + colorLetter + "_knight_2x_ns.png";
-
-            pieceCharacter = "N";
             directions = new List<Direction> { new Direction(1, 2), new Direction(1, -2), new Direction(-1, 2), new Direction(-1, -2),
                                                      new Direction(2, 1), new Direction(2, -1), new Direction(-2, 1), new Direction(-2, -1)
             };
@@ -281,10 +277,8 @@ namespace G12_ChessApplication.Src.chess_game.util
     {
         public Rook(ChessColor color) : base(color)
         {
-            string colorLetter = (ChessColor == ChessColor.WHITE) ? "w" : "b";
+            string colorLetter = (chessColor == ChessColor.WHITE) ? "w" : "b";
             uri = "pack://application:,,,/Images/" + colorLetter + "_rook_2x_ns.png";
-
-            pieceCharacter = "R";
             directions = new List<Direction> { new Direction(1, 0), new Direction(-1, 0), new Direction(0, 1), new Direction(0, -1) };
         }
         public Rook(Rook r) : base(r) { }
@@ -306,10 +300,8 @@ namespace G12_ChessApplication.Src.chess_game.util
     {
         public Queen(ChessColor color) : base(color)
         {
-            string colorLetter = (ChessColor == ChessColor.WHITE) ? "w" : "b";
+            string colorLetter = (chessColor == ChessColor.WHITE) ? "w" : "b";
             uri = "pack://application:,,,/Images/" + colorLetter + "_queen_2x_ns.png";
-
-            pieceCharacter = "Q";
             directions = new List<Direction> { new Direction(1, 0), new Direction(-1, 0), new Direction(0, 1), new Direction(0, -1),
                                                     new Direction(-1, -1), new Direction(-1, 1), new Direction(1, 1), new Direction(1, -1) 
             };
@@ -332,10 +324,8 @@ namespace G12_ChessApplication.Src.chess_game.util
     {
         public King(ChessColor color) : base(color)
         {
-            string colorLetter = (ChessColor == ChessColor.WHITE) ? "w" : "b";
+            string colorLetter = (chessColor == ChessColor.WHITE) ? "w" : "b";
             uri = "pack://application:,,,/Images/" + colorLetter + "_king_2x_ns.png";
-
-            pieceCharacter = "K";
             directions = new List<Direction> { new Direction(1, 0), new Direction(-1, 0), new Direction(0, 1), new Direction(0, -1),
                                                     new Direction(-1, -1), new Direction(-1, 1), new Direction(1, 1), new Direction(1, -1)
             };
@@ -381,7 +371,7 @@ namespace G12_ChessApplication.Src.chess_game.util
                 {
                     bool canCastle = false;
                     ChessPiece piece = gameState[i];
-                    if (piece != null && piece is Rook && piece.ChessColor == Game.UserPlayer.Color && !piece.hasMoved)
+                    if (piece != null && piece is Rook && piece.chessColor == Game.UserPlayer.Color && !piece.hasMoved)
                     {
                         List<Move> castleMoves;
                         bool check = piece.CanTakePieceAt(i, index, ref gameState, out castleMoves);

@@ -17,7 +17,7 @@ namespace G12_ChessApplication.Src.chess_game
         public PuzzleGame(MainWindow main) : base(main, ChessColor.WHITE)
         {
             ChessPuzzle chessPuzzle = new ChessPuzzle();
-            chessPuzzle.board = "4r1rk/5K1b/7R/R7/8/8/8/8";
+            chessPuzzle.board = "4r1rk/5K1b/7R/R7/8/8/8/8 w";
             chessPuzzle.color = ChessColor.WHITE;
             chessPuzzle.enemyMoves.Add(new Move(7, 15));
             chessPuzzle.playerMoves.Add(new Move(23, 15));

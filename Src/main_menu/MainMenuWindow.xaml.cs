@@ -41,7 +41,7 @@ namespace G12_ChessApplication
             string code = CodeBox.Text;
             if(code == string.Empty)
             {
-                code += "127.0.0.1";
+                code += "192.168.1.16";
                 //MessageBox.Show("Enter code to join");
                 //return;
             }

@@ -24,6 +24,8 @@ namespace G12_ChessApplication.Src.chess_game
         public List<Move> PlayerMoves = new List<Move>();
         public static Player UserPlayer { get; set; }
         public static ChessColor PlayerColor { get; set; }
+        public ChessColor CurrentPlayerColor { get; set; } = ChessColor.WHITE;
+
         public bool IsPieceSelected { get; set; }
         public int SelectedPieceIndex { get; set; }
 
@@ -45,7 +47,7 @@ namespace G12_ChessApplication.Src.chess_game
         {
             mainWindow = main;
             PlayerColor = chessColor;
-            gameState = FenParser.CreatePieceArray();
+            FenParser.CreatePieceArray(out gameState);
             MainWindow.mainBoard.SetBoardSetup();
             oneCheck = false;
             twoCheck = false;
@@ -94,16 +96,35 @@ namespace G12_ChessApplication.Src.chess_game
 
         public void SetGameState(string board)
         {
+
+            List<string> strings = new List<string>();
             try
             {
-                gameState = FenParser.CreatePieceArray(board);
+                strings = FenParser.CreatePieceArray(out gameState, board);
             }
-            catch (ArgumentException)
+            catch (ArgumentException a)
             {
+                Trace.WriteLine(a.Message + " board: " + board);
                 return;
             }
 
             MainWindow.mainBoard.SetBoardSetup(board);
+            mainWindow.ClearHighLights();
+            prevLegalMoves = new List<Move>();
+            OpponentMoves = new List<Move>();
+            PlayerMoves = new List<Move>();
+            checkMate = false;
+            staleMate = false;
+            oneCheck = false;
+            twoCheck = false;
+            isCheckIndex = false;
+
+            CurrentPlayerColor = strings.First() == "w" ? ChessColor.WHITE : ChessColor.BLACK;
+            if (UserPlayer.Color != CurrentPlayerColor && !Online)
+            {
+                UserPlayer.ChangePlayer();
+            }
+
         }
 
         public bool CanSelectPieceAt(int index)
@@ -116,11 +137,11 @@ namespace G12_ChessApplication.Src.chess_game
                 return false;
             }
 
-            var pieceColor = piece.ChessColor;
+            var pieceColor = piece.chessColor;
 
             Trace.WriteLine($"Selected Piece: {piece}, {pieceColor}");
 
-            if (!turnToMove || pieceColor != UserPlayer.Color)
+            if (pieceColor != CurrentPlayerColor || pieceColor != UserPlayer.Color)
             {
                 return false;
             }
@@ -141,23 +162,28 @@ namespace G12_ChessApplication.Src.chess_game
 
         public async Task ApplyMove(Move move)
         {
-            move.movingPiece = (ChessPiece)gameState[move.fromIndex].Clone();
+            move.movingPiece = new JsonPiece(FenParser.GetCharFromPiece(gameState[move.fromIndex]), gameState[move.fromIndex].hasMoved, gameState[move.fromIndex].chessColor);
             if (gameState[move.fromIndex] is Pawn p)
             {
                 if (move is PromotionMove pm)
                 {
-                    if (turnToMove)
+                    if (UserPlayer.Color == CurrentPlayerColor)
                     {
                         ChessPiece promotePiece = await mainWindow.PromotionPopupFunc(move);
-                        pm.piecePromotedTo = promotePiece;
+                        gameState[move.fromIndex] = promotePiece;
+                        pm.piecePromotedTo = new JsonPiece(FenParser.GetCharFromPiece(promotePiece), promotePiece.hasMoved, promotePiece.chessColor);
                     }
-                    gameState[move.fromIndex] = pm.piecePromotedTo;
+                    else
+                    {
+                        gameState[move.fromIndex] = pm.piecePromotedTo.GetChessPiece();
+                    }
                 }
             }
 
             if (move is CastlingMove castlingMove)
             {
-                castlingMove.rookMove.movingPiece = (ChessPiece)gameState[castlingMove.rookMove.fromIndex].Clone();
+                ChessPiece rook = gameState[castlingMove.rookMove.fromIndex];
+                castlingMove.rookMove.movingPiece = new JsonPiece(FenParser.GetCharFromPiece(rook), rook.hasMoved, rook.chessColor);
                 gameState[castlingMove.rookMove.fromIndex].hasMoved = true;
                 gameState[castlingMove.rookMove.toIndex] = gameState[castlingMove.rookMove.fromIndex];
                 gameState[castlingMove.rookMove.fromIndex] = null;
@@ -170,19 +196,20 @@ namespace G12_ChessApplication.Src.chess_game
 
             if (move is EnPassantMove enPassantMove)
             {
-                enPassantMove.enPassantPiece = (ChessPiece)gameState[enPassantMove.capturedIndex].Clone();
+                ChessPiece enPassantPiece = gameState[enPassantMove.capturedIndex];
+                enPassantMove.enPassantPiece = new JsonPiece(FenParser.GetCharFromPiece(enPassantPiece), enPassantPiece.hasMoved, enPassantPiece.chessColor);
                 gameState[enPassantMove.capturedIndex] = null;
             }
 
             if (move.isACapture || gameState[move.toIndex] != null)
             {
-                move.capturedPiece = (ChessPiece)gameState[move.toIndex].Clone();
+                ChessPiece capturedPiece = gameState[move.toIndex];
+                move.capturedPiece = new JsonPiece(FenParser.GetCharFromPiece(capturedPiece), capturedPiece.hasMoved, capturedPiece.chessColor);
             }
-
 
             AddMoveToHistory(move);
 
-            if (Game.PlayerColor == gameState[move.fromIndex].ChessColor)
+            if (Game.PlayerColor == gameState[move.fromIndex].chessColor)
             {
                 if (OpponentMoves.Count > 0)
                 {
@@ -209,7 +236,7 @@ namespace G12_ChessApplication.Src.chess_game
         {
             mainWindow.UnHighLightMove(move);
             RemoveMoveFromHistory(move);
-            if (PlayerColor == move.movingPiece.ChessColor)
+            if (PlayerColor == move.movingPiece.chessColor)
             {
                 PlayerMoves.Remove(move);
                 if (OpponentMoves.Count > 0)
@@ -228,16 +255,16 @@ namespace G12_ChessApplication.Src.chess_game
 
             if (move is CastlingMove castlingMove)
             {
-                gameState[castlingMove.rookMove.toIndex] = castlingMove.rookMove.movingPiece;
+                gameState[castlingMove.rookMove.toIndex] = castlingMove.rookMove.movingPiece.GetChessPiece();
                 gameState[castlingMove.rookMove.fromIndex] = null;
             }
 
             if (move is EnPassantMove enPassantMove)
             {
-                gameState[enPassantMove.capturedIndex] = enPassantMove.enPassantPiece;
+                gameState[enPassantMove.capturedIndex] = enPassantMove.enPassantPiece.GetChessPiece();
             }
-            gameState[move.fromIndex] = move.capturedPiece;
-            gameState[move.toIndex] = move.movingPiece;
+            gameState[move.fromIndex] = move.capturedPiece.GetChessPiece();
+            gameState[move.toIndex] = move.movingPiece.GetChessPiece();
             mainWindow.UpdateUIAfterMove();
             HandleChecks();
         }
@@ -275,6 +302,7 @@ namespace G12_ChessApplication.Src.chess_game
                 ApplyReverseMove(moveToUndo);
                 mainWindow.UpdateUIAfterMove();
                 UserPlayer.ChangePlayer();
+                CurrentPlayerColor = UserPlayer.Color;
                 HandleChecks();
             }
         }
@@ -296,7 +324,7 @@ namespace G12_ChessApplication.Src.chess_game
             int kingCol = kingIndex % 8;
             for (int i = 0; i < gameState.Length; i++)
             {
-                if (gameState[i] == null || gameState[i].ChessColor == kingPiece.ChessColor)
+                if (gameState[i] == null || gameState[i].chessColor == kingPiece.chessColor)
                 {
                     continue;
                 }
@@ -321,7 +349,7 @@ namespace G12_ChessApplication.Src.chess_game
             {
                 if (gameState[i] is King king)
                 {
-                    if (king.ChessColor == kingColor)
+                    if (king.chessColor == kingColor)
                     {
                         kingIndex = i;
                         break;
@@ -334,7 +362,7 @@ namespace G12_ChessApplication.Src.chess_game
 
         public async void HandleChecks()
         {
-            List<List<Move>> checks = IsKingInCheck(ref gameState, turnToMove ? UserPlayer.Color : UserPlayer.Color);
+            List<List<Move>> checks = IsKingInCheck(ref gameState, UserPlayer.Color);
             Trace.WriteLine("Amount of checks: " + checks.Count);
             checkIndexes.Clear();
             oneCheck = checks.Count == 1;
@@ -349,7 +377,7 @@ namespace G12_ChessApplication.Src.chess_game
             bool cantMove = true;
             for (int i = 0; i < gameState.Length; i++)
             {
-                if (gameState[i] != null && gameState[i].ChessColor == Game.UserPlayer.Color)
+                if (gameState[i] != null && gameState[i].chessColor == Game.UserPlayer.Color)
                 {
                     List<Move> legalMoves;
                     if (OpponentMoves.Count > 0)
@@ -373,7 +401,7 @@ namespace G12_ChessApplication.Src.chess_game
                 if (Online)
                 {
                     isCheckIndex = true;
-                    SendMsg("Check " + oldKingIndex);
+                    SendMsg("Check:" + oldKingIndex);
                 }
                 mainWindow.HighlightSquare(oldKingIndex, MainWindow.DefaultCheckColor);
                 if (cantMove)
@@ -383,7 +411,7 @@ namespace G12_ChessApplication.Src.chess_game
                     ChessColor chessColor = Game.UserPlayer.Color == ChessColor.WHITE ? ChessColor.BLACK : ChessColor.WHITE;
                     if (Online)
                     {
-                        SendMsg("CheckMate  " + chessColor);
+                        SendMsg("CheckMate:" + chessColor);
                         await HandleGameEnd(true, chessColor);
                     }
                     Trace.WriteLine("Player " + chessColor + " has won!!!!");
@@ -405,7 +433,7 @@ namespace G12_ChessApplication.Src.chess_game
                 if (Online && isCheckIndex)
                 {
                     isCheckIndex = false;
-                    SendMsg("UnCheck " + oldKingIndex);
+                    SendMsg("UnCheck:" + oldKingIndex);
                 }
                 mainWindow.ResetCheckColor(oldKingIndex);
             }
@@ -417,7 +445,7 @@ namespace G12_ChessApplication.Src.chess_game
         public void AddMoveToHistory(Move move)
         {
             GameRecord m = new GameRecord();
-            if (move.movingPiece.ChessColor == ChessColor.BLACK && mainWindow.GameHistory.Items.Count > 0)
+            if (move.movingPiece.chessColor == ChessColor.BLACK && mainWindow.GameHistory.Items.Count > 0)
             {
                 m = (GameRecord)mainWindow.GameHistory.Items.GetItemAt(mainWindow.GameHistory.Items.Count - 1);
                 mainWindow.GameHistory.Items.Remove(m);
@@ -436,7 +464,7 @@ namespace G12_ChessApplication.Src.chess_game
         private void RemoveMoveFromHistory(Move move)
         {
             GameRecord m = new GameRecord();
-            if (move.movingPiece.ChessColor == ChessColor.BLACK)
+            if (move.movingPiece.chessColor == ChessColor.BLACK)
             {
                 m = (GameRecord)mainWindow.GameHistory.Items.GetItemAt(mainWindow.GameHistory.Items.Count - 1);
                 mainWindow.GameHistory.Items.Remove(m);

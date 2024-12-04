@@ -35,10 +35,6 @@ namespace G12_ChessApplication.Src.chess_game
             _code = code;
             userPlayerUsername = userName;
             UserPlayer = new Player(userName, chessColor);
-            if (chessColor == ChessColor.BLACK)
-            {
-                turnToMove = false;
-            }
             Online = true;
             MainWindow.mainBoard.SetBoardSetup();
             SetUpSocket();
@@ -67,7 +63,7 @@ namespace G12_ChessApplication.Src.chess_game
                 _clientThread.IsBackground = true;
                 _clientThread.Start();
 
-                SendObject(_stream, "Username " + userPlayerUsername);
+                SendObject(_stream, "Username:" + userPlayerUsername);
                 Trace.WriteLine("Connected to server");
             }
             catch (SocketException)
@@ -125,7 +121,7 @@ namespace G12_ChessApplication.Src.chess_game
                     Object obj = ReceiveObject(networkStream);
                     if (obj is string Username)
                     {
-                        string[] commands = Username.Split(" ");
+                        string[] commands = Username.Split(":");
                         if ( (commands[1] == userOpponentUsername || _client == null) && commands[1] != userPlayerUsername)
                         {
                             Application.Current.Dispatcher.BeginInvoke(
@@ -172,15 +168,10 @@ namespace G12_ChessApplication.Src.chess_game
             Application.Current.Dispatcher.BeginInvoke(
               DispatcherPriority.Background,
                 new Action(() => {
-                    SendObject(_stream, "Color " + (int)PlayerColor);
-                    SendObject(_stream, "Turn " + turnToMove);
-                    SendObject(_stream, "Username " + userPlayerUsername);
-                    string board = FenParser.GetFenStringFromArray(gameState);
-                    if (PlayerColor != ChessColor.WHITE)
-                    {
-                        board = Reverse(board);
-                    }
-                    SendObject(_stream, "Board " + board);
+                    SendObject(_stream, "Color:" + (int)PlayerColor);
+                    SendObject(_stream, "Username:" + userPlayerUsername);
+                    string board = FenParser.GetFenStringFromArray(gameState, CurrentPlayerColor, PlayerColor != ChessColor.WHITE);
+                    SendObject(_stream, "Board:" + board);
                     SendGameHistrory(_stream);
                 }));
         }
@@ -201,7 +192,7 @@ namespace G12_ChessApplication.Src.chess_game
                     if (obj is Move move)
                     {
                         ApplyMove(move);
-                        turnToMove = true;
+                        CurrentPlayerColor = UserPlayer.Color;
                     }
                     else if (obj is GameRecord moveRecord)
                     {
@@ -216,7 +207,7 @@ namespace G12_ChessApplication.Src.chess_game
 
         private void HandleStringMsg(string s)
         {
-            string[] command = s.Split(' ');
+            string[] command = s.Split(':');
             if (command.Length != 0)
             {
                 switch(command[0])
@@ -245,9 +236,6 @@ namespace G12_ChessApplication.Src.chess_game
                         {
                             UserPlayer.SetColor(PlayerColor);
                         }
-                        break;
-                    case "Turn":
-                        turnToMove = command[1] == "False";
                         break;
                     case "Board":
                         string board = command[1];
@@ -401,7 +389,7 @@ namespace G12_ChessApplication.Src.chess_game
                     Move currentMove = prevLegalMoves.Find(item => item.toIndex == index);
                     await ApplyMove(currentMove);
                     currentMove = PlayerMoves.Last();
-                    turnToMove = false;
+                    CurrentPlayerColor = opponent;
                     SendObject(_stream, currentMove);
                 }
                 catch (Exception e)

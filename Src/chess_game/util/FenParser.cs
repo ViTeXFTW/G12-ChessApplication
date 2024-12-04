@@ -10,19 +10,25 @@ namespace G12_ChessApplication.Src.chess_game.util
 {
     public static class FenParser
     {
-        public static ChessPiece[] CreatePieceArray(string fenString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR")
+        public static List<string> CreatePieceArray(out ChessPiece[] board, string fenString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w")
         {   
             int colorFacing = Game.PlayerColor == ChessColor.WHITE ? 1 : -1;
-            ChessPiece[] board = new ChessPiece[64];
+            board = new ChessPiece[64];
+            List<string> parameters = new List<string>();
 
             // Extract the piece placement field from the FEN string
             string[] fields = fenString.Split(' ');
-            if (fields.Length < 1)
+            if (fields.Length < 2)
             {
                 throw new ArgumentException("Invalid FEN string");
             }
 
             string piecePlacement = fields[0];
+
+            for (int i = 1; i < fields.Length; i++)
+            {
+                parameters.Add(fields[i]);
+            }
 
             // Split the ranks
             string[] ranks = piecePlacement.Split('/');
@@ -48,9 +54,7 @@ namespace G12_ChessApplication.Src.chess_game.util
                     }
                     else
                     {
-                        // Determine the color of the piece
-                        ChessColor color = char.IsUpper(c) ? ChessColor.WHITE : ChessColor.BLACK;
-                        ChessPiece piece = CreatePieceFromChar(char.ToLower(c), color);
+                        ChessPiece piece = CreatePieceFromChar(c);
 
                         int squareIndex = actualRank * 8 + file;
                         board[squareIndex] = piece;
@@ -65,11 +69,13 @@ namespace G12_ChessApplication.Src.chess_game.util
                 }
             }
 
-            return board;
+            return parameters;
         }
 
-        private static ChessPiece CreatePieceFromChar(char pieceChar, ChessColor color)
+        public static ChessPiece CreatePieceFromChar(char pieceChar)
         {
+            ChessColor color = char.IsUpper(pieceChar) ? ChessColor.WHITE : ChessColor.BLACK;
+            pieceChar = char.ToLower(pieceChar);
             switch (pieceChar)
             {
                 case 'p':
@@ -89,7 +95,7 @@ namespace G12_ChessApplication.Src.chess_game.util
             }
         }
 
-        public static string GetFenStringFromArray(ChessPiece[] gameState)
+        public static string GetFenStringFromArray(ChessPiece[] gameState, ChessColor currentTurn, bool reverse = false)
         {
             string fenString = "";
             int emptySpaces = 0;
@@ -125,9 +131,17 @@ namespace G12_ChessApplication.Src.chess_game.util
                 counter++;
             }
 
+            if (reverse)
+            {
+                fenString = Game.Reverse(fenString);
+            }
+
+            fenString += " ";
+            fenString += (currentTurn == ChessColor.WHITE) ? "w" : "b";
+
             return fenString;
         }
-        private static char GetCharFromPiece(ChessPiece piece)
+        public static char GetCharFromPiece(ChessPiece piece)
         {
             char ch; 
             switch (piece)
@@ -155,7 +169,7 @@ namespace G12_ChessApplication.Src.chess_game.util
                     break;
 
             }
-            if (piece.ChessColor == ChessColor.WHITE)
+            if (piece.chessColor == ChessColor.WHITE)
             {
                 ch = char.ToUpper(ch);
             }

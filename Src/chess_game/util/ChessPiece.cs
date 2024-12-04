@@ -27,42 +27,33 @@ namespace G12_ChessApplication.Src.chess_game.util
     [XmlInclude(typeof(Rook))]
     [XmlInclude(typeof(Queen))]
     [XmlInclude(typeof(King))]
-    public class ChessPiece : ICloneable
+    public abstract class ChessPiece : ICloneable
     {
-        public ChessColor ChessColor { get; set; }
+        public ChessColor chessColor { get; set; }
         public bool hasMoved { get; set; } = false;
         public List<Direction> directions { get; set; }
         public int distance { get; set; } = 100;
         public string uri { get; set; } = string.Empty;
-        public string pieceCharacter { get; set; } = "";
 
         [JsonConstructor]
         public ChessPiece(ChessColor color)
         {
-            ChessColor = color;
+            chessColor = color;
         }
 
         public ChessPiece() { }
 
         public ChessPiece(ChessPiece chessPiece)
         {
-            this.ChessColor = chessPiece.ChessColor;
+            this.chessColor = chessPiece.chessColor;
             this.directions = chessPiece.directions;
             this.distance = chessPiece.distance;
             this.hasMoved = chessPiece.hasMoved;
             this.uri = chessPiece.uri;
-            this.pieceCharacter = chessPiece.pieceCharacter;
         }
 
-        public virtual bool CanTakePieceAt(int ownIndex, int attackIndex, ref ChessPiece[] gameState, out List<Move> moves)
-        {
-            moves = new List<Move>();
-            return false;
-        }
-        public virtual object Clone()
-        {
-            return new ChessPiece(this);
-        }
+        public abstract bool CanTakePieceAt(int ownIndex, int attackIndex, ref ChessPiece[] gameState, out List<Move> moves);
+        public abstract object Clone();
 
 
         public bool CanTakeHorizontalOrVertical(int ownIndex, int attackIndex, ref ChessPiece[] gameState, out List<Move> moves)
@@ -228,7 +219,7 @@ namespace G12_ChessApplication.Src.chess_game.util
                     int newIndex = row * 8 + col;
                     if (gameState[newIndex] != null)
                     {
-                        if (this.ChessColor != gameState[newIndex].ChessColor)
+                        if (this.chessColor != gameState[newIndex].chessColor)
                         {
                             result.Add(new Move(index, newIndex, true));
                         }
@@ -318,7 +309,7 @@ namespace G12_ChessApplication.Src.chess_game.util
                 int intermediateIndex = intermediateRow * 8 + intermediateCol;
                 if (gameState[intermediateIndex] != null)
                 {
-                    if (gameState[intermediateIndex] is King && gameState[intermediateIndex].ChessColor == Game.UserPlayer.Color)
+                    if (gameState[intermediateIndex] is King && gameState[intermediateIndex].chessColor == Game.UserPlayer.Color)
                     {
                         return false;
                     }
@@ -344,7 +335,7 @@ namespace G12_ChessApplication.Src.chess_game.util
 
                 if (interceptingPiece != null)
                 {
-                    if (interceptingPiece.ChessColor == ChessColor)
+                    if (interceptingPiece.chessColor == chessColor)
                     {
                         return false;
                     }

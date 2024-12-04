@@ -309,7 +309,7 @@ namespace G12_ChessApplication
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            Trace.WriteLine(FenParser.GetFenStringFromArray(game.gameState));
+            Trace.WriteLine(FenParser.GetFenStringFromArray(game.gameState, game.CurrentPlayerColor));
 
             if (game is not PlayerGame)
             {
@@ -347,7 +347,7 @@ namespace G12_ChessApplication
         {
             promoting = true;
             _taskCompletionSource = new TaskCompletionSource<ChessPiece>();
-            ChessColor color = move.movingPiece.ChessColor;
+            ChessColor color = move.movingPiece.chessColor;
             int currentIndex = move.toIndex;
             int incrementor = Game.PlayerColor == color ? 8 : -8;
             List<ChessPiece> piecesToChooseFrom = new List<ChessPiece> { new Queen(color), new Rook(color), new Knight(color), new Bishop(color) };
@@ -393,6 +393,14 @@ namespace G12_ChessApplication
         public void SetOpponent(string userOpponentUsername)
         {
             topPlayerName.Text = userOpponentUsername;
+        }
+
+        internal void ClearHighLights()
+        {
+            foreach (ChessSquareUI square in mainBoard.Children)
+            {
+                square.SetDefaultColor();
+            }
         }
     }
 }

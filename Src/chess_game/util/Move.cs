@@ -11,16 +11,14 @@ namespace G12_ChessApplication.Src.chess_game.util
     [JsonDerivedType(typeof(CastlingMove), "CastlingMove")]
     [JsonDerivedType(typeof(EnPassantMove), "EnPassantMove")]
     [JsonDerivedType(typeof(PromotionMove), "PromotionMove")]
-    [XmlInclude(typeof(EnPassantMove))]
-    [XmlInclude(typeof(CastlingMove))]
     public class Move
     {
         public int fromIndex { get; set; }
         public int toIndex { get; set; }
         public bool isACapture { get; set; }
         public bool isACheck { get; set; } = false;
-        public ChessPiece movingPiece { get; set; } = null;
-        public ChessPiece capturedPiece { get; set; } = null; 
+        public JsonPiece movingPiece { get; set; } = null;
+        public JsonPiece capturedPiece { get; set; } = null; 
 
         [JsonConstructor]
         public Move(int fromIndex, int toIndex, bool isACapture = false)
@@ -59,13 +57,15 @@ namespace G12_ChessApplication.Src.chess_game.util
             char startingLetter = colorS ? 'a' : 'h';
             int co = colorS ? 1 : -1;
             int startingRow = colorS ? 7 : 0;
-            string move = this.movingPiece.pieceCharacter;
+            string move = "";
             char col = (char)(this.toIndex % 8 * co + startingLetter );
             int row = Math.Abs(this.toIndex / 8 - startingRow) + 1;
 
+            move += this.movingPiece.pieceType;
+
             if (this.isACapture || this is EnPassantMove)
             {
-                if (this.movingPiece is Pawn)
+                if (this.movingPiece.pieceType == 'P')
                 {
                     move += (char)(this.fromIndex % 8 * co + startingLetter);
                 }
@@ -77,7 +77,7 @@ namespace G12_ChessApplication.Src.chess_game.util
             if (this is PromotionMove promotion)
             {
                 move += "=";
-                move += promotion.piecePromotedTo.pieceCharacter;
+                move += promotion.piecePromotedTo.pieceType;
             }
 
             if (this.isACheck)
@@ -92,7 +92,7 @@ namespace G12_ChessApplication.Src.chess_game.util
     public class EnPassantMove : Move
     {
         public int capturedIndex { get; set; }
-        public ChessPiece enPassantPiece { get; set; } = null;
+        public JsonPiece enPassantPiece { get; set; } = null;
 
 
         [JsonConstructor]
@@ -156,7 +156,6 @@ namespace G12_ChessApplication.Src.chess_game.util
                 move = "O-O";
             }
 
-            Trace.WriteLine(move);
             return move;
         }
 
@@ -164,7 +163,7 @@ namespace G12_ChessApplication.Src.chess_game.util
 
     public class PromotionMove : Move
     {
-        public ChessPiece piecePromotedTo { get; set; } = null;
+        public JsonPiece piecePromotedTo { get; set; } = null;
         [JsonConstructor]
         public PromotionMove(int fromIndex, int toIndex) : base(fromIndex, toIndex) { }
         public PromotionMove(int fromIndex, int toIndex, bool isACapture) : base(fromIndex, toIndex, isACapture) { }
