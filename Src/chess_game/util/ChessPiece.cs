@@ -144,21 +144,29 @@ namespace G12_ChessApplication.Src.chess_game.util
             List<Move> bindingMoves = new List<Move>();
             List<Move> generalMoves = new List<Move>();
             List<Move> tempResult = new List<Move>();
+
+            // If there is a double check, the only piece that can move is the king
             if (Game.twoCheck)
             {
                 return tempResult;
             }
 
+            generalMoves = GenerelFindMoves(index, gameState);
+
             bool binding = CheckForBinding(index, ref gameState, out bindingMoves);
             if (binding)
             {
                 if (this is Knight)
-                {
+                {   
+                    // If the knight is bound then there are no possible moves
                     bindingMoves.Clear();
+                    return bindingMoves;
                 }
                 else
                 {
-                    generalMoves = GenerelFindMoves(index, gameState);
+                    // Cross reference general moves with the binding, and keep only the ones that match.
+                    // The reason we cant just take the binding moves is because they dont take into account what the piece can do.
+                    // It just gives a list of moves that would avoid putting the king in check
                     foreach (var res in generalMoves)
                     {
                         if (bindingMoves.Any(x => x.toIndex == res.toIndex))
@@ -170,7 +178,7 @@ namespace G12_ChessApplication.Src.chess_game.util
             }
             else
             {
-                tempResult = GenerelFindMoves(index, gameState);
+                tempResult = generalMoves;
             }
 
             foreach (Move move in tempResult)
@@ -183,6 +191,8 @@ namespace G12_ChessApplication.Src.chess_game.util
                 }
             }
 
+            // If there is a check the piece must stop the check if it wants to move
+            // So we cross reference with the checkIndexes, which are the moves that could stop or block a check
             if (Game.oneCheck)
             {
                 foreach (Move move in tempResult)
