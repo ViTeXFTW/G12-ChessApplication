@@ -14,7 +14,7 @@ namespace G12_ChessApplication
         {
             base.OnStartup(e);
 
-            // Start with the login window
+            // Start with the login window, Hej
             init_login();
         }
 
