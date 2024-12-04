@@ -51,6 +51,15 @@ namespace G12_ChessApplication.Src.chess_game.util
                 Colors.Remove(Colors.Last());
                 SetColor();
             }
+            else
+            {
+                SolidColorBrush color = Colors.Find(m => m == MainWindow.DefaultCheckColor);
+                if (color != null)
+                {
+                    Colors.Remove(color);
+                }
+                    
+            }
         }
 
         private void SetColor()

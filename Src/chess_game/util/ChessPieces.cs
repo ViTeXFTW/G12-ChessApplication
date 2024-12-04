@@ -34,6 +34,7 @@ namespace G12_ChessApplication.Src.chess_game.util
         public override List<Move> FindLegalMoves(int index, ref ChessPiece[] gameState, Move lastMove)
         {
             List<Move> tempResult = new List<Move>();
+            List<Move> generalMoves = new List<Move>();
             List<Move> result = new List<Move>();
 
             if (Game.twoCheck)
@@ -77,10 +78,10 @@ namespace G12_ChessApplication.Src.chess_game.util
 
             foreach (var item in newDirections)
             {
-                int row = fromRow + item.row; 
+                int row = fromRow + item.row;
                 int col = fromCol + item.col;
 
-                int startingRow = Game.UserPlayer.directionCo == 1 ? 1 : 6; 
+                int startingRow = Game.UserPlayer.directionCo == 1 ? 1 : 6;
 
                 // this.distance can be 2 if pawn hasnt moved, so can only be used if pawn is moving forward
                 int disCounter = (item.col == 0 && startingRow == fromRow) ? this.distance : 1;
@@ -121,6 +122,23 @@ namespace G12_ChessApplication.Src.chess_game.util
                     col += item.col;
                 }
             }
+
+            //List<Move> ignore;
+            //generalMoves = GenerelFindMoves(index, gameState);
+            //foreach (Move move in generalMoves)
+            //{
+            //    if (CanTakePieceAt(move.fromIndex, move.toIndex, ref gameState, out ignore))
+            //    {
+            //        if (promotionRow == (move.fromIndex / 8))
+            //        {
+            //            tempResult.Add(new PromotionMove(move));
+            //        }
+            //        else
+            //        {
+            //            tempResult.Add(move);
+            //        }
+            //    }
+            //}
 
             if (fromRow == 3 && lastMove != null)
             {
