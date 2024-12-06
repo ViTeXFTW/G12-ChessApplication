@@ -12,11 +12,19 @@
             <ColumnDefinition Width="5*" />
             <ColumnDefinition Width="2*" />
         </Grid.ColumnDefinitions>
-        <StackPanel VerticalAlignment="Top">
-            <Button x:Name="NextPuzzle" Content="Next Puzzle"/>
-            <Button x:Name="RepeatPuzzle" Content="Repeat Puzzle" Click="RepeatPuzzle_Click"/>
-            <Button Content="Undo" Click="Button_Click"/>
-            <Button Content="Go back" Click="Button_Click_1" />
+        <StackPanel x:Name="PuzzlePanel" VerticalAlignment="Top" Visibility="Collapsed" Grid.Column="0">
+            <Button x:Name="NextPuzzle" Content="Next Puzzle" Margin="0, 10, 0, 0"/>
+            <Button x:Name="RepeatPuzzle" Content="Repeat Puzzle" Click="RepeatPuzzle_Click" Margin="0, 10, 0, 0"/>
+            <Button Content="Go back" Click="Go_Back_Click" Margin="0, 10, 0, 0"/>
+        </StackPanel>
+        <StackPanel x:Name="PlayPanel" VerticalAlignment="Top" Visibility="Collapsed" Grid.Column="0">
+            <Button Content="Offer draw" Click="Draw_Click" Margin="0, 10, 0, 0"/>
+            <Button Content="Resign" Click="Resign_Click" Margin="0, 10, 0, 0"/>
+            <Button Content="Go back" Click="Go_Back_Click" Margin="0, 10, 0, 0"/>
+        </StackPanel>
+        <StackPanel x:Name="AnalysisPanel" VerticalAlignment="Top" Visibility="Collapsed" Grid.Column="0">
+            <Button Content="Undo" Click="Undo_Click" Margin="0, 10, 0, 0"/>
+            <Button Content="Go back" Click="Go_Back_Click" Margin="0, 10, 0, 0"/>
         </StackPanel>
         
         <DataGrid x:Name="GameHistory" AutoGenerateColumns="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="2" Margin="5">

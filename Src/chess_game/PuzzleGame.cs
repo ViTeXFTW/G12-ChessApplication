@@ -72,5 +72,10 @@ namespace G12_ChessApplication.Src.chess_game
 
             IsPuzzleDone();
         }
+
+        public override bool SendMsg(string msg)
+        {
+            return false;
+        }
     }
 }

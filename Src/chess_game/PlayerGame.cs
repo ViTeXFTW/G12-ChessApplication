@@ -25,11 +25,11 @@ namespace G12_ChessApplication.Src.chess_game
         private Thread _listenerThread { get; set; }
         private Thread _clientThread { get; set; }
         private string _code { get; set; }
-
         private bool host { get; set; } = true;
-
         public string userPlayerUsername { get; set; } = "";
         public string userOpponentUsername { get; set; } = "";
+        public bool Draw { get; set; } = false;
+
         public PlayerGame(MainWindow main, string code, ChessColor chessColor, string userName) : base(main, chessColor)
         {
             _code = code;
@@ -63,7 +63,7 @@ namespace G12_ChessApplication.Src.chess_game
                 _clientThread.IsBackground = true;
                 _clientThread.Start();
 
-                SendObject(_stream, "Username:" + userPlayerUsername);
+                SendMsg("Username:" + userPlayerUsername);
                 Trace.WriteLine("Connected to server");
             }
             catch (SocketException)
@@ -140,7 +140,7 @@ namespace G12_ChessApplication.Src.chess_game
                         }
                         else
                         {
-                            SendObject(networkStream, "DENIED");
+                            SendMsg("DENIED");
                         }
                     }
                 }
@@ -168,10 +168,10 @@ namespace G12_ChessApplication.Src.chess_game
             Application.Current.Dispatcher.BeginInvoke(
               DispatcherPriority.Background,
                 new Action(() => {
-                    SendObject(_stream, "Color:" + (int)PlayerColor);
-                    SendObject(_stream, "Username:" + userPlayerUsername);
+                    SendMsg("Color:" + (int)PlayerColor);
+                    SendMsg("Username:" + userPlayerUsername);
                     string board = FenParser.GetFenStringFromArray(gameState, CurrentPlayerColor, PlayerColor != ChessColor.WHITE);
-                    SendObject(_stream, "Board:" + board);
+                    SendMsg("Board:" + board);
                     SendGameHistrory(_stream);
                 }));
         }
@@ -192,6 +192,7 @@ namespace G12_ChessApplication.Src.chess_game
                     if (obj is Move move)
                     {
                         ApplyMove(move);
+                        Draw = false;
                         CurrentPlayerColor = UserPlayer.Color;
                     }
                     else if (obj is GameRecord moveRecord)
@@ -219,11 +220,11 @@ namespace G12_ChessApplication.Src.chess_game
                         mainWindow.ResetCheckColor(ConvertIndex(Convert.ToInt32(command[1])));
                         break;
                     case "CheckMate":
-                        checkMate = true;
-                        MessageBox.Show("YOU WIN");
+                        gameRunning = false;
+                        MessageBox.Show("You win by checkmate");
                         break;
                     case "StaleMate":
-                        staleMate = true;
+                        gameRunning = false;
                         MessageBox.Show("Stalemate!");
                         break;
                     case "Color":
@@ -247,6 +248,19 @@ namespace G12_ChessApplication.Src.chess_game
                         break;
                     case "DENIED":
                         mainWindow.GoBackToMainMenu();
+                        break;
+                    case "Draw":
+                        Draw = true;
+                        MessageBox.Show("Opponent offered a draw");
+                        break;
+                    case "AcceptDraw":
+                        gameRunning = false;
+                        MessageBox.Show("The game ended in a draw");
+                        Draw = false;
+                        break;
+                    case "Resign":
+                        gameRunning = false;
+                        MessageBox.Show("You win by resignation");
                         break;
                     default:
                         break;
@@ -388,6 +402,7 @@ namespace G12_ChessApplication.Src.chess_game
 
                     Move currentMove = prevLegalMoves.Find(item => item.toIndex == index);
                     await ApplyMove(currentMove);
+                    Draw = false;
                     currentMove = PlayerMoves.Last();
                     CurrentPlayerColor = opponent;
                     SendObject(_stream, currentMove);
@@ -402,28 +417,60 @@ namespace G12_ChessApplication.Src.chess_game
             }
         }
 
-        public override void SendMsg(string msg)
+        public override bool SendMsg(string msg)
         {
-            SendObject(_stream, msg);
+            try
+            {
+                SendObject(_stream, msg);
+            }
+            catch (Exception e)
+            {
+                Trace.WriteLine(e.Message + ", " + msg);
+                return false;
+            }
+
+            return true;
         }
 
-        public override async Task HandleGameEnd(bool isCheckmate, ChessColor winnerColor = ChessColor.WHITE)
+
+        // Result:
+        //      0 = Draw
+        //      1 = Win
+        //      2 = Loss
+        public override async Task HandleGameEnd(int result)
         {
             if (Online)
             {
                 var dbConnector = new SQLConnector();
-                int result;
-                if (isCheckmate)
-                {
-                    result = 2;
-                }
-                else
-                {
-                    result = 0;
-                }
 
                 await dbConnector.AddOrUpdateMatchResult(userPlayerUsername, userOpponentUsername, result);
             }
+        }
+
+        public void OfferDraw()
+        {
+            if (Draw)
+            {
+                gameRunning = false;
+                Draw = false;
+                SendMsg("AcceptDraw");
+                MessageBox.Show("The game ended in a draw");
+                _ = HandleGameEnd(0);
+            }
+            else
+            {
+                SendMsg("Draw");
+                MessageBox.Show("You offered a draw");
+            }
+
+        }
+
+        public void Resign()
+        {
+            gameRunning = false;
+            SendMsg("Resign");
+            MessageBox.Show("You lose by resignation");
+            _ = HandleGameEnd(2);
         }
     }
 }

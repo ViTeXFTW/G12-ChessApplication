@@ -93,20 +93,47 @@ namespace G12_ChessApplication
             switch(GameType)
             {
                 case "play":
-                    SetupPlayerNames();
-                    ChessColor color = (ChessColor)RandomNumberGenerator.GetInt32(0, 2);
-                    game = new PlayerGame(this, GameCode, color, userName);
+                    SetupPlay();
                     break;
                 case "puzzles":
-                    game = new PuzzleGame(this);
+                    SetupPuzzle();
                     break;
                 case "Analysis":
-                    SetupFenStringInput();
-                    game = new AnalysisGame(this);
+                    SetupAnalysis();
                     break;
                 default:
                     break;
             }
+        }
+
+        private void SetupPuzzle()
+        {
+            SetPanel(PuzzlePanel);
+            game = new PuzzleGame(this);
+        }
+
+        private void SetupAnalysis()
+        {
+            SetPanel(AnalysisPanel);
+            SetupFenStringInput();
+            game = new AnalysisGame(this);
+        }
+
+        private void SetupPlay()
+        {
+            SetPanel(PlayPanel);
+            SetupPlayerNames();
+            ChessColor color = (ChessColor)RandomNumberGenerator.GetInt32(0, 2);
+            game = new PlayerGame(this, GameCode, color, userName);
+        }
+
+        private void SetPanel(StackPanel panel)
+        {
+            PuzzlePanel.Visibility = Visibility.Collapsed;
+            PlayPanel.Visibility = Visibility.Collapsed;
+            AnalysisPanel.Visibility = Visibility.Collapsed;
+
+            panel.Visibility = Visibility.Visible;
         }
 
         private void InitializeBoard()
@@ -131,28 +158,20 @@ namespace G12_ChessApplication
             fenString = new TextBox
             {
                 Text = "7k/8/8/5Q2/8/8/8/K7",
-                HorizontalAlignment = HorizontalAlignment.Left,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Center,
                 FontSize = 16
             };
+
+            fenString.KeyDown += SetFenString;
+
             Grid.SetRow(fenString, 1); // Assign to the bottom row
             BoardGrid.Children.Add(fenString);
-
-            enter = new Button
-            {
-                Content = "Set",
-                HorizontalAlignment = HorizontalAlignment.Right,
-                VerticalAlignment = VerticalAlignment.Center,
-                FontSize = 16
-            };
-            enter.Click += SetFenString;
-            Grid.SetRow(enter, 1); // Assign to the bottom row
-            BoardGrid.Children.Add(enter);
         }
 
-        private void SetFenString(object sender, RoutedEventArgs e)
+        private void SetFenString(object sender, System.Windows.Input.KeyEventArgs e)
         {
-            if (fenString.Text != string.Empty)
+            if (e.Key == Key.Enter && fenString.Text != string.Empty)
             {
                 game.SetGameState(fenString.Text);
             }
@@ -307,7 +326,7 @@ namespace G12_ChessApplication
             puzzleGame.RepeatPuzzle();
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void Undo_Click(object sender, RoutedEventArgs e)
         {
             Trace.WriteLine(FenParser.GetFenStringFromArray(game.gameState, game.CurrentPlayerColor));
 
@@ -317,9 +336,25 @@ namespace G12_ChessApplication
             }
         }
 
-        private void Button_Click_1(object sender, RoutedEventArgs e)
+        private void Go_Back_Click(object sender, RoutedEventArgs e)
         {
             GoBackToMainMenu();
+        }
+
+        private void Draw_Click(object sender, RoutedEventArgs e)
+        {
+            if (game is  PlayerGame playerGame)
+            {
+                playerGame.OfferDraw();
+            }
+        }
+
+        private void Resign_Click(object sender, RoutedEventArgs e)
+        {
+            if (game is PlayerGame playerGame)
+            {
+                playerGame.Resign();
+            }
         }
 
         public void GoBackToMainMenu()

@@ -36,5 +36,10 @@ namespace G12_ChessApplication.Src.chess_game
                 HandleChecks();
             }
         }
+
+        public override bool SendMsg(string msg)
+        {
+            return false;
+        }
     }
 }

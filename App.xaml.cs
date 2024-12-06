@@ -87,6 +87,9 @@ namespace G12_ChessApplication
                     break;
                 case "Settings":
                     break;
+                case "LogOut":
+                    Logout(sender);
+                    break;
                 case "LeaderBoard":
                     open_leaderboard(currentUser.Username);
                     break;
@@ -130,6 +133,24 @@ namespace G12_ChessApplication
             if (sender is Window gameWindowToClose)
             {
                 gameWindowToClose.Close();
+            }
+        }
+
+        private void Logout(object sender)
+        {
+            // Close the game window
+            if (sender is Window mainmenu)
+            {
+                mainmenu.Hide();
+            }
+
+            // Show the main menu window
+            init_login();
+
+            // Close the game window
+            if (sender is Window mainmenuClose)
+            {
+                mainmenuClose.Close();
             }
         }
     }

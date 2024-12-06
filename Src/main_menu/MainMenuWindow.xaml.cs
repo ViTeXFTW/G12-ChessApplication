@@ -62,6 +62,11 @@ namespace G12_ChessApplication
         {
             OptionSelected?.Invoke(this, new OptionSelectedEventArgs { SelectedOption = "LeaderBoard" });
         }
+
+        private void LogOutBtn_Click(object sender, RoutedEventArgs e)
+        {
+            OptionSelected?.Invoke(this, new OptionSelectedEventArgs { SelectedOption = "LogOut" });
+        }
     }
 
     public class OptionSelectedEventArgs : EventArgs

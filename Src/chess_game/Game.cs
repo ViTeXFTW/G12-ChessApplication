@@ -34,12 +34,12 @@ namespace G12_ChessApplication.Src.chess_game
         public static bool twoCheck { get; set; } = false;
         public bool isCheckIndex { get; set; } = false;
         public int oldKingIndex { get; set; } = 0;
-        public bool checkMate { get; set; } = false;
-        public bool staleMate { get; set; } = false;
         public bool Online { get; set; } = false;
         public static List<Move> checkIndexes { get; set; } = new List<Move>();
 
         public ChessPiece[] gameState = new ChessPiece[64];
+        public  bool gameRunning { get; set; } = true;
+
         public MainWindow mainWindow { get; set; }
 
         public bool turnToMove { get; set; } = true;
@@ -66,7 +66,7 @@ namespace G12_ChessApplication.Src.chess_game
             }
             else
             {
-                if (CanSelectPieceAt(index) && !staleMate && !checkMate)
+                if (CanSelectPieceAt(index) && gameRunning)
                 {
                     List<Move> legalMoves;
                     Move lastMove = OpponentMoves.Count > 0 ? OpponentMoves.Last() : null;
@@ -113,11 +113,10 @@ namespace G12_ChessApplication.Src.chess_game
             prevLegalMoves = new List<Move>();
             OpponentMoves = new List<Move>();
             PlayerMoves = new List<Move>();
-            checkMate = false;
-            staleMate = false;
             oneCheck = false;
             twoCheck = false;
             isCheckIndex = false;
+            gameRunning = true;
 
             CurrentPlayerColor = strings.First() == "w" ? ChessColor.WHITE : ChessColor.BLACK;
             if (UserPlayer.Color != CurrentPlayerColor && !Online)
@@ -263,7 +262,7 @@ namespace G12_ChessApplication.Src.chess_game
             {
                 gameState[enPassantMove.capturedIndex] = enPassantMove.enPassantPiece.GetChessPiece();
             }
-            gameState[move.fromIndex] = move.capturedPiece.GetChessPiece();
+            gameState[move.fromIndex] = move.capturedPiece != null ? move.capturedPiece.GetChessPiece() : null;
             gameState[move.toIndex] = move.movingPiece.GetChessPiece();
             mainWindow.UpdateUIAfterMove();
             HandleChecks();
@@ -367,8 +366,6 @@ namespace G12_ChessApplication.Src.chess_game
             checkIndexes.Clear();
             oneCheck = checks.Count == 1;
             twoCheck = checks.Count == 2;
-            checkMate = false;
-            staleMate = false;
 
             if (oneCheck)
             {
@@ -407,12 +404,12 @@ namespace G12_ChessApplication.Src.chess_game
                 if (cantMove)
                 {
                     // CHECKMATE
-                    checkMate = true;
+                    gameRunning = false;
                     ChessColor chessColor = Game.UserPlayer.Color == ChessColor.WHITE ? ChessColor.BLACK : ChessColor.WHITE;
                     if (Online)
                     {
                         SendMsg("CheckMate:" + chessColor);
-                        await HandleGameEnd(true, chessColor);
+                        await HandleGameEnd(2);
                     }
                     Trace.WriteLine("Player " + chessColor + " has won!!!!");
                     MessageBox.Show("Player " + chessColor + " has won you lose !!!!");
@@ -420,12 +417,12 @@ namespace G12_ChessApplication.Src.chess_game
             }
             else if (cantMove)
             {
+                gameRunning = false;
                 if (Online)
                 {
                     SendMsg("StaleMate");
-                    await HandleGameEnd(false); // Color doesn't matter for stalemate
+                    await HandleGameEnd(0); // Color doesn't matter for stalemate
                 }
-                staleMate = true;
                 MessageBox.Show("Stalemate!");
             }
             else
@@ -439,7 +436,7 @@ namespace G12_ChessApplication.Src.chess_game
             }
         }
 
-        public virtual void SendMsg(string msg) { }
+        public abstract bool SendMsg(string msg);
 
 
         public void AddMoveToHistory(Move move)
@@ -484,7 +481,7 @@ namespace G12_ChessApplication.Src.chess_game
             return new string(charArray);
         }
 
-        public virtual async Task HandleGameEnd(bool isCheckmate, ChessColor winnerColor = ChessColor.WHITE) { }
+        public virtual async Task HandleGameEnd(int result) { }
     }
 
     public class GameRecord
