@@ -41,9 +41,8 @@ namespace G12_ChessApplication
             string code = CodeBox.Text;
             if(code == string.Empty)
             {
-                code += "192.168.1.16";
-                //MessageBox.Show("Enter code to join");
-                //return;
+                MessageBox.Show("Enter code to join");
+                return;
             }
             OptionSelected?.Invoke(this, new OptionSelectedEventArgs { SelectedOption = "JoinGame", Code = code });
         }

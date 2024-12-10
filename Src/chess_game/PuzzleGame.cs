@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Http.Json;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace G12_ChessApplication.Src.chess_game
 {
@@ -36,6 +37,7 @@ namespace G12_ChessApplication.Src.chess_game
         {
             if (CurrentPuzzle.playerMoves.Count == 0)
             {
+                MessageBox.Show("Puzzle solved!");
                 puzzleIsActive = false;
             }
         }
@@ -49,6 +51,7 @@ namespace G12_ChessApplication.Src.chess_game
         {
             CurrentPuzzle = new ChessPuzzle(Puzzles.First());
             puzzleIsActive = true;
+            mainWindow.ClearHighLights();
         }
 
         public override void HandleClick(int index)
@@ -58,16 +61,20 @@ namespace G12_ChessApplication.Src.chess_game
 
             if (CurrentPuzzle.playerMoves.First().fromIndex == selectedSquareIndex && CurrentPuzzle.playerMoves.First().toIndex == index)
             {
-                ApplyMove(CurrentPuzzle.playerMoves.First());
+                _ = ApplyMove(CurrentPuzzle.playerMoves.First());
                 CurrentPuzzle.playerMoves.RemoveAt(0);
 
                 if (CurrentPuzzle.enemyMoves.Count > 0)
                 {
                     UserPlayer.ChangePlayer();
-                    ApplyMove(CurrentPuzzle.enemyMoves.First());
+                    _ = ApplyMove(CurrentPuzzle.enemyMoves.First());
                     CurrentPuzzle.enemyMoves.RemoveAt(0);
                 }
                 UserPlayer.ChangePlayer();
+            }
+            else
+            {
+                MessageBox.Show("Incorrect, try again");
             }
 
             IsPuzzleDone();
