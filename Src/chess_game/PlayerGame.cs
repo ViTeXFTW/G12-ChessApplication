@@ -344,22 +344,6 @@ namespace G12_ChessApplication.Src.chess_game
             }
         }
 
-        // Method to send the Move object
-        void SendMove(NetworkStream networkStream, Move move)
-        {
-            var serializer = new XmlSerializer(typeof(Move));
-            serializer.Serialize(networkStream, move);
-        }
-
-        // Method to receive the Move object
-        Move ReceiveMove(NetworkStream networkStream)
-        {
-            var serializer = new XmlSerializer(typeof(Move));
-            Move move = (Move)serializer.Deserialize(networkStream);
-            move.InvertMove();
-            return move;
-        }
-
         public void CleanUpSockets()
         {
             if (_server != null)
