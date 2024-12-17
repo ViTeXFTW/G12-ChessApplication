@@ -420,6 +420,7 @@ namespace G12_ChessApplication
 
             return selectedPiece;
         }
+
         public Task<ChessPiece> GetSelectedPieceAsync()
         {
             return _taskCompletionSource.Task;

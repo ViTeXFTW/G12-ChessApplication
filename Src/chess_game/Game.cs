@@ -38,7 +38,7 @@ namespace G12_ChessApplication.Src.chess_game
         public static List<Move> checkIndexes { get; set; } = new List<Move>();
 
         public ChessPiece[] gameState = new ChessPiece[64];
-        public  bool gameRunning { get; set; } = true;
+        public bool gameRunning { get; set; } = true;
 
         public MainWindow mainWindow { get; set; }
 

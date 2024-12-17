@@ -19,29 +19,19 @@ namespace G12_ChessApplication.Src.chess_game.util
     [JsonDerivedType(typeof(Rook), "Rook")]
     [JsonDerivedType(typeof(Queen), "Queen")]
     [JsonDerivedType(typeof(King), "King")]
-    [XmlInclude(typeof(Pawn))]
-    [XmlInclude(typeof(Knight))]
-    [XmlInclude(typeof(Pawn))]
-    [XmlInclude(typeof(Bishop))]
-    [XmlInclude(typeof(Knight))]
-    [XmlInclude(typeof(Rook))]
-    [XmlInclude(typeof(Queen))]
-    [XmlInclude(typeof(King))]
-    public abstract class ChessPiece : ICloneable
+    public abstract class ChessPiece
     {
-        public ChessColor chessColor { get; set; }
+        public readonly ChessColor chessColor;
         public bool hasMoved { get; set; } = false;
-        public List<Direction> directions { get; set; }
-        public int distance { get; set; } = 100;
-        public string uri { get; set; } = string.Empty;
+        protected List<Direction> directions { get; set; }
+        protected int distance { get; set; } = 100;
+        public string uri { get; protected set; } = string.Empty;
 
         [JsonConstructor]
         public ChessPiece(ChessColor color)
         {
             chessColor = color;
         }
-
-        public ChessPiece() { }
 
         public ChessPiece(ChessPiece chessPiece)
         {
@@ -53,10 +43,9 @@ namespace G12_ChessApplication.Src.chess_game.util
         }
 
         public abstract bool CanTakePieceAt(int ownIndex, int attackIndex, ref ChessPiece[] gameState, out List<Move> moves);
-        public abstract object Clone();
 
 
-        public bool CanTakeHorizontalOrVertical(int ownIndex, int attackIndex, ref ChessPiece[] gameState, out List<Move> moves)
+        protected bool CanTakeHorizontalOrVertical(int ownIndex, int attackIndex, ref ChessPiece[] gameState, out List<Move> moves)
         {
             moves = new List<Move>();
             int ownRow = ownIndex / 8;
@@ -97,7 +86,7 @@ namespace G12_ChessApplication.Src.chess_game.util
             
         }
 
-        public bool CanTakeDiagonal(int ownIndex, int attackIndex, ref ChessPiece[] gameState, out List<Move> moves)
+        protected bool CanTakeDiagonal(int ownIndex, int attackIndex, ref ChessPiece[] gameState, out List<Move> moves)
         {
             moves = new List<Move>();
             int ownRow = ownIndex / 8;

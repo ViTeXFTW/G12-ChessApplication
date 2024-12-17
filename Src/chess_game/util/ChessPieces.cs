@@ -24,12 +24,6 @@ namespace G12_ChessApplication.Src.chess_game.util
         }
 
         public Pawn(Pawn p) : base(p) { }
-        public Pawn() { }
-
-        public override object Clone()
-        {
-            return new Pawn(this);
-        }
 
         public override List<Move> FindLegalMoves(int index, ref ChessPiece[] gameState, Move lastMove)
         {
@@ -238,16 +232,10 @@ namespace G12_ChessApplication.Src.chess_game.util
             directions = new List<Direction> { new Direction(-1, -1), new Direction(-1, 1), new Direction(1, 1), new Direction(1, -1) };
         }
         public Bishop(Bishop b) : base(b) { }
-        public Bishop() { }
 
         public override bool CanTakePieceAt(int ownIndex, int attackIndex, ref ChessPiece[] gameState, out List<Move> moves)
         {
             return CanTakeDiagonal(ownIndex, attackIndex, ref gameState, out moves);
-        }
-
-        public override object Clone()
-        {
-            return new Bishop(this);
         }
     }
 
@@ -263,7 +251,6 @@ namespace G12_ChessApplication.Src.chess_game.util
             distance = 1;
         }
         public Knight(Knight k) : base(k) { }
-        public Knight() { }
 
         public override bool CanTakePieceAt(int ownIndex, int attackIndex, ref ChessPiece[] gameState, out List<Move> moves)
         {
@@ -283,12 +270,7 @@ namespace G12_ChessApplication.Src.chess_game.util
             }
 
             return false;
-        }
-
-        public override object Clone()
-        {
-            return new Knight(this);
-        }
+        } 
     }
 
     public class Rook : ChessPiece
@@ -300,17 +282,10 @@ namespace G12_ChessApplication.Src.chess_game.util
             directions = new List<Direction> { new Direction(1, 0), new Direction(-1, 0), new Direction(0, 1), new Direction(0, -1) };
         }
         public Rook(Rook r) : base(r) { }
-        
-        public Rook() { }
 
         public override bool CanTakePieceAt(int ownIndex, int attackIndex, ref ChessPiece[] gameState, out List<Move> moves)
         {
             return CanTakeHorizontalOrVertical(ownIndex, attackIndex, ref gameState, out moves);
-        }
-
-        public override object Clone()
-        {
-            return new Rook(this);
         }
     }
 
@@ -325,16 +300,10 @@ namespace G12_ChessApplication.Src.chess_game.util
             };
         }
         public Queen(Queen q) : base(q) { }
-        public Queen() { }
 
         public override bool CanTakePieceAt(int ownIndex, int attackIndex, ref ChessPiece[] gameState, out List<Move> moves)
         {
             return CanTakeDiagonal(ownIndex, attackIndex, ref gameState, out moves) || CanTakeHorizontalOrVertical(ownIndex, attackIndex, ref gameState, out moves); 
-        }
-
-        public override object Clone()
-        {
-            return new Queen(this);
         }
     }
 
@@ -350,7 +319,6 @@ namespace G12_ChessApplication.Src.chess_game.util
             distance = 1;
         }
         public King(King q) : base(q) { }
-        public King() { }
 
         public override bool CanTakePieceAt(int ownIndex, int attackIndex, ref ChessPiece[] gameState, out List<Move> moves)
         {
@@ -370,11 +338,6 @@ namespace G12_ChessApplication.Src.chess_game.util
             }
 
             return false;
-        }
-
-        public override object Clone()
-        {
-            return new King(this);
         }
 
         public override List<Move> FindLegalMoves(int index, ref ChessPiece[] gameState, Move lastMove)
