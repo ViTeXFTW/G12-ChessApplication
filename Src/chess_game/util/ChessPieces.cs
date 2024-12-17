@@ -390,7 +390,7 @@ namespace G12_ChessApplication.Src.chess_game.util
                             castleMoves.RemoveRange(0, castleMoves.Count - 2);
                             foreach (Move move in castleMoves)
                             {
-                                List<List<Move>> checks = Game.IsKingInCheck(ref gameState, move.toIndex);
+                                List<List<Move>> checks = Game.IsKingInCheck(ref gameState, Game.UserPlayer.Color, move.toIndex);
                                 if (checks.Count != 0)
                                 {
                                     canCastle = false;
@@ -415,7 +415,7 @@ namespace G12_ChessApplication.Src.chess_game.util
 
             foreach (Move move in possibleMoves)
             {
-                List<List<Move>> checks = Game.IsKingInCheck(ref gameState, move.toIndex);
+                List<List<Move>> checks = Game.IsKingInCheck(ref gameState, Game.UserPlayer.Color, move.toIndex);
                 if (checks.Count == 0)
                 {
                     result.Add(move);

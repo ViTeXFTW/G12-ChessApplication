@@ -27,5 +27,7 @@
                 <DataGridTextColumn Header="Black" Binding="{Binding BlackMove}" Width="*"/>
             </DataGrid.Columns>
         </DataGrid>
+        <Label Content="IP:" HorizontalAlignment="Center" Margin="0,85,0,0" VerticalAlignment="Top"/>
+        <Label x:Name="IPLabel" Content="xxx.xxx.xxx.xxx" HorizontalAlignment="Center" Margin="0,100,0,0" VerticalAlignment="Top"/>
     </Grid>
 </Window>

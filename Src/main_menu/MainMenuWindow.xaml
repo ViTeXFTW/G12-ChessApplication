@@ -12,7 +12,10 @@
             <Button x:Name="JoinGameBtn" Content="Join Game" Margin="0 10,0,10" Click="JoinGameBtn_Click"/>
             <TextBox x:Name="CodeBox" TextWrapping="Wrap" Text="" Margin="0,0,0,10"/>
             <Button x:Name="AnalysisBtn" Content="Analysis Board" Margin="0,0,0,10" Click="AnalysisBtn_Click"/>
-            <Button x:Name="PuzzlesBtn" Content="Puzzles" Click="PuzzlesBtn_Click"/>
+            <Button x:Name="PuzzlesBtn" Content="Puzzles" Margin="0,0,0,10" Click="PuzzlesBtn_Click"/>
+            <Button x:Name="LeaderboardBtn" Content="Leaderboard" Margin="0,0,0,10" Click="OpenLeaderboard_Click"/>
         </StackPanel>
+        <Label Content="Logged In as:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
+        <Label x:Name="UsernameLabel" Content="X" HorizontalAlignment="Left" Margin="93,10,0,0" VerticalAlignment="Top"/>
     </Grid>
 </Window>
